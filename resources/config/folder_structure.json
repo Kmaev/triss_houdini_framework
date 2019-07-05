@@ -1,0 +1,4 @@
+{
+    "render_output": "{project}\\{sequence}\\{shot}\\render\\{name}\\{version}\\$OS",
+    "cache_output": "{project}\\{sequence}\\{shot}\\cache\\{name}\\{version}\\$OS"
+}
