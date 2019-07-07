@@ -19,4 +19,3 @@ def folder_structure(template, data):
     except KeyError as e:
         raise RuntimeError("Not enough template data, {} missed ".format(e))
     return path
-
