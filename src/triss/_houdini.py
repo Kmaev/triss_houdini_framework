@@ -21,7 +21,7 @@ def extract_node_data(node):
     return data
 
 
-def crete_rop_node(node):
+def create_rop_node(node):
     geo = create_node(name='{}_geo'.format(node.name()),
                       context='/out',
                       node_type='geometry',
