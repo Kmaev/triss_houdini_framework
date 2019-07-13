@@ -19,3 +19,12 @@ def folder_structure(template, data):
     except KeyError as e:
         raise RuntimeError("Not enough template data, {} missed ".format(e))
     return path
+
+def publish_path(data):
+    folder = os.environ.get("OUT")
+    path = folder_structure(template = "publish_index", data = data)
+    path = os.path.join(folder, path)
+    return path
+
+
+

@@ -1,0 +1,19 @@
+{
+    "dust_02": {
+        "versions": {
+            "8": {
+                "description": "this is a new version for dust_01", 
+                "components": {
+                    "bgeo": "D:\\code\\learn\\resources\\publish_test\\arendi/sq_001/sh0101/sim/dust_02/v007/dust_02.$F.bgeo.sc"
+                }
+            }, 
+            "7": {
+                "description": "this is a new version for dust_01", 
+                "components": {
+                    "bgeo": "D:\\code\\learn\\resources\\publish_test\\arendi/sq_001/sh0101/sim/dust_02/v007/dust_02.$F.bgeo.sc", 
+                    "abc": "D:\\code\\learn\\resources\\publish_test\\arendi/sq_001/sh0101/sim/dust_02/v007/dust_02.$F.bgeo.sc"
+                }
+            }
+        }
+    }
+}

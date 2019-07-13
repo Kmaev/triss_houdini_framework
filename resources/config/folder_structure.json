@@ -1,5 +1,5 @@
 {
     "render_output": "{project}/{sequence}/{shot}/render/{name}/{version}/{name}.$F.exr",
-    "cache_output": "{project}/{sequence}/{shot}/sim/{name}/{version}/{name}.$F.bgeo.sc"
+    "cache_output": "{project}/{sequence}/{shot}/sim/{name}/{version}/{name}.$F.bgeo.sc",
+    "publish_index": "{project}/{sequence}/{shot}/publish/shot_index.json"
 }
-
