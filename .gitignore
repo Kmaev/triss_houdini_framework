@@ -1,3 +1,5 @@
 *.pyc
 scenes/backup/*
 hda/backup/*
+*.bgeo.sc
+*.abc
