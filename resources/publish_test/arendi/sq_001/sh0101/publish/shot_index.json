@@ -1,17 +1,35 @@
 {
-    "dust_02": {
+    "sphere_01_geo": {
         "versions": {
-            "8": {
-                "description": "this is a new version for dust_01", 
+            "11": {
+                "description": "my_publish:test", 
                 "components": {
-                    "bgeo": "D:\\code\\learn\\resources\\publish_test\\arendi/sq_001/sh0101/sim/dust_02/v007/dust_02.$F.bgeo.sc"
+                    "bgeo.sc": "D:/code/learn/resources/publish_test/arendi/sq_001/sh0101/sim/sphere_01_geo/v010/sphere_01_geo.$F4.bgeo.sc"
                 }
             }, 
-            "7": {
-                "description": "this is a new version for dust_01", 
+            "10": {
+                "description": "my_publish:test", 
                 "components": {
-                    "bgeo": "D:\\code\\learn\\resources\\publish_test\\arendi/sq_001/sh0101/sim/dust_02/v007/dust_02.$F.bgeo.sc", 
-                    "abc": "D:\\code\\learn\\resources\\publish_test\\arendi/sq_001/sh0101/sim/dust_02/v007/dust_02.$F.bgeo.sc"
+                    "abc": "D:/code/learn/resources/publish_test/arendi/sq_001/sh0101/sim/sphere_01_geo/v010/sphere_01_geo.abc", 
+                    "bgeo.sc": "D:/code/learn/resources/publish_test/arendi/sq_001/sh0101/sim/sphere_01_geo/v010/sphere_01_geo.$F4.bgeo.sc"
+                }
+            }, 
+            "13": {
+                "description": "my_publish:test", 
+                "components": {
+                    "bgeo.sc": "D:/code/learn/resources/publish_test/arendi/sq_001/sh0101/sim/sphere_01_geo/v012/sphere_01_geo.$F4.bgeo.sc"
+                }
+            }, 
+            "12": {
+                "description": "my_publish:test", 
+                "components": {
+                    "bgeo.sc": "D:/code/learn/resources/publish_test/arendi/sq_001/sh0101/sim/sphere_01_geo/v012/sphere_01_geo.$F4.bgeo.sc"
+                }
+            }, 
+            "14": {
+                "description": "my_publish:test", 
+                "components": {
+                    "bgeo.sc": "D:/code/learn/resources/publish_test/arendi/sq_001/sh0101/sim/sphere_01_geo/v010/sphere_01_geo.$F4.bgeo.sc"
                 }
             }
         }

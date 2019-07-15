@@ -4,7 +4,7 @@ import os
 
 
 def get_template(name):
-    path=os.environ.get("FOLDER_STUCTURE_PATH")
+    path = os.environ.get("FOLDER_STUCTURE_PATH")
     with open(path) as read_file:
         file = json.load(read_file)
     if name not in file.keys():
@@ -20,11 +20,9 @@ def folder_structure(template, data):
         raise RuntimeError("Not enough template data, {} missed ".format(e))
     return path
 
+
 def publish_path(data):
     folder = os.environ.get("OUT")
-    path = folder_structure(template = "publish_index", data = data)
+    path = folder_structure(template="publish_index", data=data)
     path = os.path.join(folder, path)
     return path
-
-
-
