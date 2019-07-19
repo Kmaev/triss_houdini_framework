@@ -40,6 +40,16 @@ def create_rop_node(node):
     node.setParms({"rop_link": reference_path})
     geo.setParms({"sop_path": reference_object})
 
+def update_name(node, rename = True, force_suffix=True):
+    sop_path = node.node(node.parm("sop_path").eval()).parent()
+    name = sop_path.name() + "_geo"
+    if rename:
+        node.setName(name)
+    if not node.name().endswith('_geo') and force_suffix:
+        node.setName(node.name() + '_geo')
+
+
+
 
 def get_rop_output_path(rop):
     data = extract_node_data(rop)
