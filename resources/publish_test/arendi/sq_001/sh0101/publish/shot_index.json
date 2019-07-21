@@ -25,6 +25,18 @@
                     "bgeo.sc": "D:/code/learn/resources/publish_test/arendi/sq_001/sh0101/sim/bake_geo1_geo/v011/bgeo.sc/bake_geo1_geo.$F4.bgeo.sc"
                 }
             }, 
+            "15": {
+                "description": "test", 
+                "components": {
+                    "bgeo.sc": "D:/code/learn/resources/publish_test/arendi/sq_001/sh0101/sim/bake_geo1_geo/v014/bgeo.sc/bake_geo1_geo.$F4.bgeo.sc"
+                }
+            }, 
+            "14": {
+                "description": "test", 
+                "components": {
+                    "bgeo.sc": "D:/code/learn/resources/publish_test/arendi/sq_001/sh0101/sim/bake_geo1_geo/v013/bgeo.sc/bake_geo1_geo.$F4.bgeo.sc"
+                }
+            }, 
             "1": {
                 "description": "test", 
                 "components": {
@@ -59,6 +71,16 @@
                 "description": "test", 
                 "components": {
                     "bgeo.sc": "D:/code/learn/resources/publish_test/arendi/sq_001/sh0101/sim/bake_geo1_geo/v009/bgeo.sc/bake_geo1_geo.$F4.bgeo.sc"
+                }
+            }
+        }
+    }, 
+    "cube_geo": {
+        "versions": {
+            "1": {
+                "description": "", 
+                "components": {
+                    "abc": "D:/code/learn/resources/publish_test/arendi/sq_001/sh0101/sim/cube_geo/v001/abc/cube_geo.abc"
                 }
             }
         }

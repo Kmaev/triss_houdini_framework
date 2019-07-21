@@ -80,7 +80,7 @@ def render_version_up():
     if os.path.isdir(os.path.dirname(cache_folder)):
         text = "Cache is already exists, do overwrite?"
         user_response = hou.ui.displayMessage(
-            text, buttons=('OK', 'Version Up', 'Cancel'))
+            text, buttons=('Overwrite', 'Version Up', 'Cancel'))
         if user_response == 0:
             node.parm("execute").pressButton()
         if user_response == 1:
@@ -139,7 +139,7 @@ def json_data_publisher(node):
         if file_format in read[asset_name]["versions"][version]["components"]:
             text = "Component already exists, do you want to overwrite it?"
             user_response = hou.ui.displayMessage(
-                text, buttons=('OK', 'Version Up', 'Cancel'))
+                text, buttons=('Overwrite', 'Version Up', 'Cancel'))
             if user_response == 1:
                 all_versions = [int(x) for x in read[asset_name]["versions"]]
                 print(all_versions)
@@ -159,7 +159,9 @@ def json_data_publisher(node):
 
 def publish(node):
     cache_parm = node.parm("file_output")
-    frame_range = range(240)
+    start_frame = node.parm("start_endx").eval()
+    end_frame = node.parm("start_endy").eval()
+    frame_range = list(range(int(start_frame), int(end_frame+1)))
     json_data_publisher(node)
     cache_exists = cache_validator(node, "file_output", frame_range)
     if cache_exists is False:
