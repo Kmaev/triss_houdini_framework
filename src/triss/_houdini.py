@@ -40,15 +40,14 @@ def create_rop_node(node):
     node.setParms({"rop_link": reference_path})
     geo.setParms({"sop_path": reference_object})
 
-def update_name(node, rename = True, force_suffix=True):
+
+def update_name(node, rename=True, force_suffix=True):
     sop_path = node.node(node.parm("sop_path").eval()).parent()
     name = sop_path.name() + "_geo"
     if rename:
         node.setName(name)
     if not node.name().endswith('_geo') and force_suffix:
         node.setName(node.name() + '_geo')
-
-
 
 
 def get_rop_output_path(rop):
@@ -98,14 +97,14 @@ def render_version_up():
 def cache_validator(node, cache_parm, frame_range):
     cache = get_rop_output_path(node)
     cache_parm = node.parm(cache_parm)
+
     if os.path.isdir(os.path.dirname(cache)):
         for i in frame_range:
-            cache_per_frame = cache_parm.evalAtFrame(i + 1)
+            cache_per_frame = cache_parm.evalAtFrame(i)
             if not os.path.isfile(cache_per_frame):
                 return False
-    else:
-        return False
-    return True
+        return True
+    return False
 
 
 def json_data_publisher(node):
@@ -142,7 +141,7 @@ def json_data_publisher(node):
                 text, buttons=('Overwrite', 'Version Up', 'Cancel'))
             if user_response == 1:
                 all_versions = [int(x) for x in read[asset_name]["versions"]]
-                print(all_versions)
+                # print(all_versions)
                 version = str(max(all_versions) + 1)
 
                 read[asset_name]["versions"][version] = {'components': {}}
@@ -159,11 +158,12 @@ def json_data_publisher(node):
 
 def publish(node):
     cache_parm = node.parm("file_output")
-    start_frame = node.parm("start_endx").eval()
-    end_frame = node.parm("start_endy").eval()
-    frame_range = list(range(int(start_frame), int(end_frame+1)))
+    start_frame = int(node.parm("start_endx").eval())
+    end_frame = int(node.parm("start_endy").eval() + 1)
+    frame_range = range(start_frame, end_frame)
     json_data_publisher(node)
     cache_exists = cache_validator(node, "file_output", frame_range)
+    print(cache_exists)
     if cache_exists is False:
         node.parm("execute").pressButton()
     if not cache_parm.isAtDefault():
