@@ -1,5 +1,6 @@
 from __future__ import print_function
 from triss import structure
+import traceback
 import json
 import hou
 import os
@@ -168,3 +169,63 @@ def publish(node):
         node.parm("execute").pressButton()
     if not cache_parm.isAtDefault():
         cache_parm.revertToAndRestorePermanentDefaults()
+
+
+def catch_menu_exceptions(func):
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception:
+            traceback.print_exc()
+            return []
+
+    return wrapper
+
+
+def read_assets(node):
+    data = extract_node_data(node)
+    path = structure.publish_path(data)
+    # should I have nest two lines inside the publish_path function
+    path = os.path.normpath(path)
+    publish_file = path.replace('\\', '/')
+    with open(publish_file) as read_file:
+        read = json.load(read_file)
+
+    return read
+
+
+@catch_menu_exceptions
+def create_menu(assets):
+    result = []
+    for asset in assets:
+        # houdini menu expects two values, like "Token" "value" 
+        # thats why we should append twice
+        result.append(asset)
+        result.append(asset)
+    return result
+
+
+def create_assets_menu(node):
+    assets = read_assets(node).keys()
+    assets_list = create_menu(assets)
+    return assets_list
+
+
+def get_version(node):
+    read = read_assets(node)
+    asset_index = node.parm("name").eval()
+    asset_name = node.parm("name").menuItems()[asset_index]
+    all_versions = [int(x) for x in read[asset_name]["versions"]]
+    max_version = str(max(all_versions))
+    return max_version
+
+
+def create_cache_path(node):
+    file_index = node.parm("file_format").eval()
+    file_format = node.parm("file_format").menuItems()[file_index]
+    read = read_assets(node)
+    asset_index = node.parm("name").eval()
+    asset_name = node.parm("name").menuItems()[asset_index]
+    version = str(node.parm("version").eval())
+    cache_path = read[asset_name]["versions"][version]["components"][file_format]
+    return cache_path
