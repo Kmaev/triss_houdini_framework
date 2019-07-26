@@ -4,7 +4,7 @@ import traceback
 import json
 import hou
 import os
-reload(structure)
+
 
 
 def create_node(name, context, node_type, position):
@@ -110,7 +110,7 @@ def cache_validator(node, cache_parm, frame_range):
 
 def json_data_publisher(node):
     data = extract_node_data(node)
-    project_file = structure.publish_path(data)
+        
     folder = os.path.dirname(project_file)
     if not os.path.isdir(folder):
         os.makedirs(folder)
@@ -136,10 +136,14 @@ def json_data_publisher(node):
         read[asset_name]["versions"][version] = {'components': {}}
 
     else:
-        if file_format in read[asset_name]["versions"][version]["components"]:
-            text = "Component already exists, do you want to overwrite it?"
+        if version in read[asset_name]["versions"]:
+            text = "Version already exists, do you want to overwrite it?"
             user_response = hou.ui.displayMessage(
                 text, buttons=('Overwrite', 'Version Up', 'Cancel'))
+            if user_response == 0:
+                if file_format not in read[asset_name]["versions"][version]["components"]:
+                    read[asset_name]["versions"][version] = {'components': {}}
+
             if user_response == 1:
                 all_versions = [int(x) for x in read[asset_name]["versions"]]
                 # print(all_versions)
@@ -229,3 +233,46 @@ def create_cache_path(node):
     version = str(node.parm("version").eval())
     cache_path = read[asset_name]["versions"][version]["components"][file_format]
     return cache_path
+
+def onLoad_extractf_data(node):
+    context = node.parm('context').eval()
+    context_data = context.split('/')
+    project, sequence, shot, asset , version, file_format = context_data
+    data = {'project': project, 'sequence' : sequence, 'shot': shot, 'name': asset, 'version': version, 'format': file_format}
+    return data
+
+def onLoad_create_path(node):
+    data = onLoad_extract_data(node)
+    if data['format'].lower() == 'abc':
+        data['padding'] = ''
+    else:
+        data['padding'] = '$F4.'
+ # overwrite format from index to token value
+
+    output_path = structure.folder_structure("cache_output", data)
+    folder = os.environ.get("OUT")
+    cache = os.path.join(folder, output_path)
+    cache = os.path.normpath(cache)
+    cache = cache.replace('\\', '/')
+    return cache
+
+def onLoad_set_path(node):
+    cache = onLoad_create_path(node)
+    node.parm('file').set(cache)
+
+def change_switch(node):
+    if node.parm('context').eval().endswith("abc"):
+        switch = 0
+    else:
+        switch = 1
+    return switch
+
+def onLoad_read_comment(node):
+    data = onLoad_extract_data(node)
+    publish_file = structure.publish_path(data)
+    with open(publish_file, 'r') as read_file: 
+        file = json.load(read_file)
+    asset = data["name"]
+    version =  str(int(data['version'].strip('v')))
+    comment = file[asset]["versions"][version]['description']
+    return comment

@@ -8,8 +8,9 @@
                 }
             }, 
             "4": {
-                "description": "test", 
+                "description": "test abc", 
                 "components": {
+                    "abc": "E:/code/learn/resources/publish_test/arendi/sq_001/sh0101/sim/cube_03_geo/v004/abc/cube_03_geo.abc", 
                     "bgeo.sc": "E:/code/learn/resources/publish_test/arendi/sq_001/sh0101/sim/cube_03_geo/v004/bgeo.sc/cube_03_geo.$F4.bgeo.sc"
                 }
             }
@@ -27,6 +28,56 @@
                 "description": "test", 
                 "components": {
                     "bgeo.sc": "E:/code/learn/resources/publish_test/arendi/sq_001/sh0101/sim/sphere_01_geo/v001/bgeo.sc/sphere_01_geo.$F4.bgeo.sc"
+                }
+            }
+        }
+    }, 
+    "rbd_02_geo": {
+        "versions": {
+            "1": {
+                "description": "5555555555555555555555555555555", 
+                "components": {
+                    "abc": "E:/code/learn/resources/publish_test/arendi/sq_001/sh0101/sim/rbd_02_geo/v001/abc/rbd_02_geo.abc", 
+                    "bgeo.sc": "E:/code/learn/resources/publish_test/arendi/sq_001/sh0101/sim/rbd_02_geo/v001/bgeo.sc/rbd_02_geo.$F4.bgeo.sc"
+                }
+            }, 
+            "3": {
+                "description": "rbd_bgeo text publish comment", 
+                "components": {
+                    "abc": "E:/code/learn/resources/publish_test/arendi/sq_001/sh0101/sim/rbd_02_geo/v002/abc/rbd_02_geo.abc", 
+                    "bgeo.sc": "E:/code/learn/resources/publish_test/arendi/sq_001/sh0101/sim/rbd_02_geo/v003/bgeo.sc/rbd_02_geo.$F4.bgeo.sc"
+                }
+            }, 
+            "2": {
+                "description": "rbd_bgeo text publish comment", 
+                "components": {
+                    "abc": "E:/code/learn/resources/publish_test/arendi/sq_001/sh0101/sim/rbd_02_geo/v002/abc/rbd_02_geo.abc", 
+                    "bgeo.sc": "E:/code/learn/resources/publish_test/arendi/sq_001/sh0101/sim/rbd_02_geo/v001/bgeo.sc/rbd_02_geo.$F4.bgeo.sc"
+                }
+            }, 
+            "5": {
+                "description": "rbd_bgeo text publish comment", 
+                "components": {
+                    "abc": "E:/code/learn/resources/publish_test/arendi/sq_001/sh0101/sim/rbd_02_geo/v004/abc/rbd_02_geo.abc"
+                }
+            }, 
+            "4": {
+                "description": "rbd_bgeo text publish comment", 
+                "components": {
+                    "bgeo.sc": "E:/code/learn/resources/publish_test/arendi/sq_001/sh0101/sim/rbd_02_geo/v004/bgeo.sc/rbd_02_geo.$F4.bgeo.sc"
+                }
+            }, 
+            "7": {
+                "description": "rbd_bgeo text publish comment", 
+                "components": {
+                    "abc": "E:/code/learn/resources/publish_test/arendi/sq_001/sh0101/sim/rbd_02_geo/v007/abc/rbd_02_geo.abc", 
+                    "bgeo.sc": "E:/code/learn/resources/publish_test/arendi/sq_001/sh0101/sim/rbd_02_geo/v006/bgeo.sc/rbd_02_geo.$F4.bgeo.sc"
+                }
+            }, 
+            "6": {
+                "description": "rbd_bgeo text publish comment", 
+                "components": {
+                    "bgeo.sc": "E:/code/learn/resources/publish_test/arendi/sq_001/sh0101/sim/rbd_02_geo/v006/bgeo.sc/rbd_02_geo.$F4.bgeo.sc"
                 }
             }
         }
