@@ -43,16 +43,15 @@ class ShotListDialog(QtWidgets.QDialog):
     def __init__(self, node, parent=None):
         super(ShotListDialog, self).__init__(parent=parent)
 
-        project_file = r'E:\code\pipeline_tests\Qt\shots.json'
+        project_file = os.environ.get("PROJECTS_INDEX_PATH")
+        self.setWindowTitle('TRISS')
         self.node = node
         with open(project_file, "r") as read_file:
             self.read = json.load(read_file)
 
-        self.project = self.read.keys()[0]
-        seq = self.read[self.project]["sequences"]
-
         self.shot_index = None
 
+        self.project_list = QtWidgets.QListWidget(self)
         self.seq_list = QtWidgets.QListWidget(self)
         self.shot_list = QtWidgets.QListWidget(self)
         self.asset_list = QtWidgets.QListWidget(self)
@@ -62,8 +61,16 @@ class ShotListDialog(QtWidgets.QDialog):
         self.load_button = QtWidgets.QPushButton("Load", self)
         self.load_button.setEnabled(False)
 
-        for i in seq:
-            self.seq_list.addItem(i)
+        project_list = self.read.keys()
+        for i in project_list:
+            self.project_list.addItem(i)
+
+        # self.project = self.project_list.selectedItems()[0].text()
+
+        self.project_grp = QtWidgets.QGroupBox('Projects')
+        self.project_grp_layout = QtWidgets.QHBoxLayout()
+        self.project_grp.setLayout(self.project_grp_layout)
+        self.project_grp_layout.addWidget(self.project_list)
 
         self.sequence_grp = QtWidgets.QGroupBox('Sequences')
         self.sequence_grp_layout = QtWidgets.QHBoxLayout()
@@ -81,9 +88,9 @@ class ShotListDialog(QtWidgets.QDialog):
         self.asset_grp_layout.addWidget(self.asset_list)
 
         self.top_grp_layout = QtWidgets.QHBoxLayout()
+        self.top_grp_layout.addWidget(self.project_grp)
         self.top_grp_layout.addWidget(self.sequence_grp)
         self.top_grp_layout.addWidget(self.shot_grp)
-        self.top_grp_layout.addWidget(self.asset_grp)
 
         self.version_grp = QtWidgets.QGroupBox('Versions')
         self.version_grp_layout = QtWidgets.QHBoxLayout()
@@ -91,19 +98,15 @@ class ShotListDialog(QtWidgets.QDialog):
         self.version_grp_layout.addWidget(self.version_list)
 
         self.component_grp = QtWidgets.QGroupBox('Components')
-        self.component_grp_layout = QtWidgets.QHBoxLayout()
+        self.component_grp_layout = QtWidgets.QVBoxLayout()
         self.component_grp.setLayout(self.component_grp_layout)
         self.component_grp_layout.addWidget(self.component_list)
-
-        self.description_grp = QtWidgets.QGroupBox('Description')
-        self.description_grp_layout = QtWidgets.QHBoxLayout()
-        self.description_grp.setLayout(self.description_grp_layout)
-        self.description_grp_layout.addWidget(self.description_box)
+        self.component_grp_layout.addWidget(self.description_box)
 
         self.bottom_grp_layout = QtWidgets.QHBoxLayout()
+        self.bottom_grp_layout.addWidget(self.asset_grp)
         self.bottom_grp_layout.addWidget(self.version_grp)
         self.bottom_grp_layout.addWidget(self.component_grp)
-        self.bottom_grp_layout.addWidget(self.description_grp)
 
         layout = QtWidgets.QVBoxLayout()
         layout.addLayout(self.top_grp_layout)
@@ -112,17 +115,22 @@ class ShotListDialog(QtWidgets.QDialog):
 
         self.setLayout(layout)
 
+        self.project_list.itemSelectionChanged.connect(self.onProjectChanged)
         self.seq_list.itemSelectionChanged.connect(self.onSequenceChanged)
         self.shot_list.itemSelectionChanged.connect(self.onShotChanged)
         self.asset_list.itemSelectionChanged.connect(self.onAssetChanged)
         self.version_list.itemSelectionChanged.connect(self.onVersionChanged)
-        self.component_list.itemSelectionChanged.connect(self.onComponentChanged)
+        self.component_list.itemSelectionChanged.connect(
+            self.onComponentChanged)
 
         self.load_button.clicked.connect(self.onLoad)
 
     def getSelection(self, widget):
-        sequence = widget.selectedItems()
-        return sequence[0].text() if sequence else None
+        selected = widget.selectedItems()
+        return selected[0].text() if selected else None
+
+    def selectedProject(self):
+        return self.getSelection(self.project_list)
 
     def selectedSequence(self):
         return self.getSelection(self.seq_list)
@@ -139,18 +147,27 @@ class ShotListDialog(QtWidgets.QDialog):
     def selectedComponent(self):
         return self.getSelection(self.component_list)
 
-    def onSequenceChanged(self):
-        # print([item.text() for item in self.seq_list.selectedItems()])
-        self.shot_list.clear()
+    def onProjectChanged(self):
+        self.seq_list.clear()
 
-        sequence = self.seq_list.selectedItems()
-        sequence = sequence[0].text() if sequence else None
+        project = self.selectedProject()
+
+        if not project:
+            return
+        sequences = self.read[project]["sequences"]
+        for i in sequences:
+            self.seq_list.addItem(i)
+
+    def onSequenceChanged(self):
+        self.shot_list.clear()
+        project = self.selectedProject()
+        sequence = self.selectedSequence()
 
         if not sequence:
             # Clear the shot list
             return
 
-        shots = self.read[self.project]["sequences"][sequence]["shots"]
+        shots = self.read[project]["sequences"][sequence]["shots"]
         for i in shots:
             self.shot_list.addItem(i)
 
@@ -160,17 +177,15 @@ class ShotListDialog(QtWidgets.QDialog):
     def onShotChanged(self):
         self.asset_list.clear()
         self.description_box.clear()
-        sequence = self.seq_list.selectedItems()
-        sequence = sequence[0].text() if sequence else None
-
-        shot = self.shot_list.selectedItems()
-        shot = shot[0].text() if shot else None
+        project = self.selectedProject()
+        sequence = self.selectedSequence()
+        shot = self.selectedShot()
 
         if not sequence or not shot:
             self.shot_index = None
             return
 
-        data = {"project": self.project,
+        data = {"project": project,
                 "sequence": sequence,
                 "shot": shot}
         path = structure.publish_path(data)
@@ -180,11 +195,10 @@ class ShotListDialog(QtWidgets.QDialog):
             with open(path, "r") as read_shot_index:
                 shot_index = json.load(read_shot_index)
             self.shot_index = shot_index
-            
         except IOError as e:
-            self.description_box.setPlainText("No published elements for this shot")
+            self.description_box.setPlainText(
+                "No published elements for this shot")
             raise RuntimeError("No published elements for this shot")
-            
 
         assets = shot_index.keys()
         for i in assets:
@@ -195,13 +209,10 @@ class ShotListDialog(QtWidgets.QDialog):
         if not self.shot_index:
             return
 
-        asset = self.asset_list.selectedItems()
-        asset = asset[0].text() if asset else None
+        asset = self.selectedAsset()
         version = self.shot_index[asset]["versions"]
         for i in version:
             self.version_list.addItem(i)
-        # for ver in self.shot_index[self.asset_list.selectedItems()[0].text()]:
-        #     self.version_list.addItem(ver)
 
     def onVersionChanged(self):
         self.component_list.clear()
@@ -209,11 +220,9 @@ class ShotListDialog(QtWidgets.QDialog):
         if not self.shot_index:
             return
 
-        asset = self.asset_list.selectedItems()
-        asset = asset[0].text() if asset else None
+        asset = self.selectedAsset()
 
-        version = self.version_list.selectedItems()
-        version = version[0].text() if version else None
+        version = self.selectedVersion()
 
         components = self.shot_index[asset]["versions"][version]["components"]
         for i in components:
@@ -221,7 +230,7 @@ class ShotListDialog(QtWidgets.QDialog):
 
         description = self.shot_index[asset]["versions"][version]["description"]
         self.description_box.setPlainText(description)
-        
+
     def onComponentChanged(self):
         if not self.component_list.selectedItems():
             self.load_button.setEnabled(False)
@@ -231,17 +240,18 @@ class ShotListDialog(QtWidgets.QDialog):
     def onLoad(self):
 
         node = self.node
-        project = self.project
+        project = self.selectedProject()
         sequence = self.selectedSequence()
         shot = self.selectedShot()
         asset = self.selectedAsset()
         version = self.selectedVersion()
         version = "v{}".format((version).zfill(3))
         component = self.selectedComponent()
-        context = "{}/{}/{}/{}/{}/{}".format(project,sequence,shot,asset,version,component)
-        node.setParms({"context":context})
+        context = "{}/{}/{}/{}/{}/{}".format(project,
+                                             sequence, shot, asset, 
+                                             version, component)
+        node.setParms({"context": context})
         self.close()
-
 
 
 dialog = None

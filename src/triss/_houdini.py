@@ -50,13 +50,12 @@ def update_name(node, rename=True, force_suffix=True):
     if not node.name().endswith('_geo') and force_suffix:
         node.setName(node.name() + '_geo')
 
+def get_output_path(node):
+    data = extract_node_data(node)
+    template = node.parm("template").eval()
 
-def get_rop_output_path(rop):
-    data = extract_node_data(rop)
-    template = rop.parm("template").eval()
-
-    menu_index = rop.parm("data_format").eval()
-    file_format = rop.parm("data_format").menuItems()[menu_index]
+    menu_index = node.parm("data_format").eval()
+    file_format = node.parm("data_format").menuItems()[menu_index]
 
     if file_format.lower() == 'abc':
         data['padding'] = ''
@@ -65,7 +64,11 @@ def get_rop_output_path(rop):
     data["format"] = file_format  # overwrite format from index to token value
 
     output_path = structure.folder_structure(template, data)
+    return output_path
 
+def get_rop_output_path(rop):
+    
+    output_path = get_output_path(rop)
     folder = os.environ.get("OUT")
     cache = os.path.join(folder, output_path)
     cache = os.path.normpath(cache)
@@ -110,7 +113,7 @@ def cache_validator(node, cache_parm, frame_range):
 
 def json_data_publisher(node):
     data = extract_node_data(node)
-        
+    project_file = structure.publish_path(data)
     folder = os.path.dirname(project_file)
     if not os.path.isdir(folder):
         os.makedirs(folder)
@@ -125,7 +128,7 @@ def json_data_publisher(node):
 
     menu_index = node.parm("data_format").eval()
     file_format = node.parm("data_format").menuItems()[menu_index]
-    cache = get_rop_output_path(node)
+    cache = get_output_path(node)
 
     with open(project_file, "r") as read_file:
         read = json.load(read_file)
@@ -234,7 +237,7 @@ def create_cache_path(node):
     cache_path = read[asset_name]["versions"][version]["components"][file_format]
     return cache_path
 
-def onLoad_extractf_data(node):
+def onLoad_extract_data(node):
     context = node.parm('context').eval()
     context_data = context.split('/')
     project, sequence, shot, asset , version, file_format = context_data

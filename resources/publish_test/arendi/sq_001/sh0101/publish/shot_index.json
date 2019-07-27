@@ -16,6 +16,16 @@
             }
         }
     }, 
+    "rbd_03_geo": {
+        "versions": {
+            "1": {
+                "description": "first test", 
+                "components": {
+                    "abc": "arendi/sq_001/sh0101/sim/rbd_03_geo/v001/abc/rbd_03_geo.abc"
+                }
+            }
+        }
+    }, 
     "sphere_01_geo": {
         "versions": {
             "1": {
