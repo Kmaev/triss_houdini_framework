@@ -81,17 +81,18 @@ def render_version_up():
 
     cache_folder = get_rop_output_path(node)
     if os.path.isdir(os.path.dirname(cache_folder)):
-        text = "Cache is already exists, do overwrite?"
-        user_response = hou.ui.displayMessage(
-            text, buttons=('Overwrite', 'Version Up', 'Cancel'))
-        if user_response == 0:
-            node.parm("execute").pressButton()
-        if user_response == 1:
-            version = node.parm("data_version")
-            version = int(version.eval()) + 1
-            node.setParms({"data_version": version})
-        if user_response == 2:
-            raise RuntimeError('Component already exists')
+        if hou.isUIAvailable() is True:
+            text = "Cache is already exists, do overwrite?"
+            user_response = hou.ui.displayMessage(
+                text, buttons=('Overwrite', 'Version Up', 'Cancel'))
+            if user_response == 0:
+                node.parm("execute").pressButton()
+            if user_response == 1:
+                version = node.parm("data_version")
+                version = int(version.eval()) + 1
+                node.setParms({"data_version": version})
+            if user_response == 2:
+                raise RuntimeError('Component already exists')
 
     cache_parm = node.parm("file_output")
     if not cache_parm.isAtDefault():
@@ -166,8 +167,8 @@ def json_data_publisher(node):
 
 def publish(node):
     cache_parm = node.parm("file_output")
-    start_frame = int(node.parm("start_endx").eval())
-    end_frame = int(node.parm("start_endy").eval() + 1)
+    start_frame = int(node.parm("f0").eval())
+    end_frame = int(node.parm("f1").eval() + 1)
     frame_range = range(start_frame, end_frame)
     json_data_publisher(node)
     cache_exists = cache_validator(node, "file_output", frame_range)
@@ -279,3 +280,77 @@ def onLoad_read_comment(node):
     version =  str(int(data['version'].strip('v')))
     comment = file[asset]["versions"][version]['description']
     return comment
+
+
+def updateRopNetwork(render_list):
+    out = hou.node('/out')
+
+    deadline = None
+# check what nodes should be bypassed
+    
+    for child in out.children():
+        if child.name() in render_list:
+            bypass_inputs(child, render_list)
+            bypass_outputs(child, render_list)
+    for child in out.children():
+        if child.name() in render_list:
+            child.bypass(False)
+# check if deadline node existes, if not create deadline node
+        for output in child.outputs():
+            if output.type().name() == 'deadline':
+                deadline = output
+                print("deadline found in child connected nodes. deadline is {}".format(deadline))
+                break
+        if deadline == None:
+            if child.type().name() == 'deadline':
+                deadline = child
+                print("deadline found in out nodes {}".format(deadline))
+    if deadline == None:
+        deadline = out.createNode("deadline") 
+        print("deadline was created {}".format(deadline))
+    
+    deadline.bypass(False)
+# connect to deadline
+    disconnectInputs(deadline)
+    for child in out.children():
+        if child.name() in render_list:
+            node = check_outputs(child)
+
+            if node.path() == deadline.path():
+                continue
+            deadline.setNextInput(node)
+
+
+
+    # deadline.parm("dl_Submit").pressButton()
+    return hou.node(deadline.path())
+
+def setDeadline(deadline_node):
+
+
+    deadline_node.setCurrent(True)
+
+
+def disconnectInputs(node):
+    for connection in node.inputConnections():
+        node.setInput(connection.inputIndex(), None)
+
+
+def check_outputs(node):
+    if not node.outputs():
+        return node
+    else:
+        node = node.outputs()[0]
+        return check_outputs(node)
+
+def bypass_outputs(child, render_list):
+    for node in child.outputs():
+        if node not in render_list:
+            node.bypass(True)
+            bypass_outputs(node, render_list)
+
+def bypass_inputs(child, render_list):
+    for node in child.inputs():
+        if node not in render_list:
+            node.bypass(True)
+            bypass_inputs(node, render_list)

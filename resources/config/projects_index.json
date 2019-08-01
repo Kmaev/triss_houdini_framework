@@ -25,5 +25,12 @@
                 "sh2203":{}}
             }
         }
+    },
+     "deadman_island":{
+        "sequences":{
+            "sq_001":{
+                "shots":{"sh1010":{}}
+            }
+        }
     }
 }
