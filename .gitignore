@@ -3,3 +3,4 @@ scenes/backup/*
 hda/backup/*
 *.bgeo.sc
 *.abc
+resources/publish_test*

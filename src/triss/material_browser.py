@@ -10,7 +10,7 @@ from triss import res
 
 reload(_houdini)
 
-NOPREVIEW_PATH = r'E:\code\learn\resources\images\no-thumb.png'
+NOPREVIEW_PATH = r'E:\pipeline\modules\triss\1.0.0\resources\images\no-thumb.png'
 
 
 class MaterialListDialog(QtWidgets.QDialog):

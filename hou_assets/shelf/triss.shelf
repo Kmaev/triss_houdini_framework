@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shelfDocument>
+  <!-- This file contains definitions of shelves, toolbars, and tools.
+ It should not be hand-edited when it is being used by the application.
+ Note, that two definitions of the same element are not allowed in
+ a single file. -->
+
+  <tool name="maketx" label="Make TX" icon="PLASMA_App">
+    <script scriptType="python"><![CDATA[import subprocess
+import hou
+
+button, path = hou.ui.readInput('Path to file')
+if button == 0:
+    cmd = ['maketx', path,'-v','-u','--unpremult','--oiio','--format','exr','-d','half','--colorconvert','"sRGB"','"linear"']
+    print ' '.join(cmd)
+    subprocess.check_call(cmd)
+]]></script>
+  </tool>
+
+  <tool name="bakeGeo" label="Bake Geo" icon="PLASMA_App">
+    <script scriptType="python"><![CDATA[
+import sys
+sys.path.append('E:/code/python/houdini')
+import bake_geo_render
+reload(bake_geo_render)
+
+bake_geo_render.bakeGeo()
+
+]]></script>
+  </tool>
+
+  <tool name="renderBake_env" label="renderBake Environment" icon="PLASMA_App">
+    <script scriptType="python"><![CDATA[
+import sys
+sys.path.append('E:/code/python/houdini')
+import bake_geo_render
+reload(bake_geo_render)
+
+bake_geo_render.renderBake_env()
+
+]]></script>
+  </tool>
+
+  <tool name="roper" label="Roper" icon="PLASMA_App">
+    <script scriptType="python"><![CDATA[from triss import roper 
+reload(roper); 
+roper.show_houdini()]]></script>
+  </tool>
+
+  <tool name="material_browser" label="Material Browser" icon="PLASMA_App">
+    <script scriptType="python"><![CDATA[from triss import material_browser
+reload(material_browser)
+
+material_browser.show_houdini()]]></script>
+  </tool>
+
+  <tool name="gallery_publisher" label="Gallery Publisher" icon="PLASMA_App">
+    <script scriptType="python"><![CDATA[from triss import(gallery_publisher)
+reload(gallery_publisher)
+
+gallery_publisher.show_houdini()]]></script>
+  </tool>
+
+  <toolshelf name="triss" label="Triss">
+    <memberTool name="maketx"/>
+    <memberTool name="bakeGeo"/>
+    <memberTool name="renderBake_env"/>
+    <memberTool name="roper"/>
+    <memberTool name="material_browser"/>
+    <memberTool name="gallery_publisher"/>
+  </toolshelf>
+</shelfDocument>

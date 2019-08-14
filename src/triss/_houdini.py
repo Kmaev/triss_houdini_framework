@@ -401,7 +401,7 @@ def getMetadataFile(gallery, name):
     return metadata_file
 
 
-def save_nodes(gallery, name, nodes, preview=None):
+def save_nodes(gallery, name, nodes, description, preview=None):
 
     metadata_file = getMetadataFile(gallery=gallery,
                                     name=name)
@@ -411,6 +411,7 @@ def save_nodes(gallery, name, nodes, preview=None):
     publish_folder = os.path.dirname(metadata_file)
     if not os.path.isdir(publish_folder):
         os.makedirs(publish_folder)
+
 
     publish_file = os.path.join(publish_folder,
                                 'nodes.py')
@@ -422,7 +423,7 @@ def save_nodes(gallery, name, nodes, preview=None):
     saveMetadata(metadata_file=metadata_file,
                  group_name=name,
                  parent=file_contents["parent"],
-                 description="test",
+                 description= description,
                  preview=preview,
                  code=relative_path,
                  tags=file_contents['functions'])
@@ -434,8 +435,8 @@ def getPreviewPath(gallery, name):
     publish_folder = os.path.dirname(metadata_file)
     preview_folder = os.path.join(publish_folder, 'preview')
     preview_file = os.path.join(preview_folder, '{}.$F.jpg'.format(name))
-    preview_file = os.path.normpath(preview_file)
-    preview_file = preview_file.replace('\\', '/')
+    # preview_file = os.path.normpath(preview_file)
+    # preview_file = preview_file.replace('\\', '/')
 
     return preview_file
 

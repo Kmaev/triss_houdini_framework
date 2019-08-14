@@ -119,6 +119,7 @@ class PublishDialog(QtWidgets.QDialog):
             _houdini.save_nodes(gallery=self.gallery,
                                 name=self.group_name.text(),
                                 nodes=nodes,
+                                description=self.description.toPlainText(),
                                 preview=self.preview_file)
             self.close()
 
