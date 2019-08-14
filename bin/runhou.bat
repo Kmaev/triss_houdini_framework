@@ -6,4 +6,4 @@ set PROJECTS_INDEX_PATH=%~dp0\..\resources\config\projects_index.json
 set OUT=E:\code\learn\resources\publish_test
 
 
-"C:\Program Files\Side Effects Software\Houdini 17.0.352\bin\houdini.exe" %~dp0\..\scenes\versioning.hip
+"C:\Program Files\Side Effects Software\Houdini 17.0.352\bin\houdini.exe" %~dp0\..\scenes\tests.hip

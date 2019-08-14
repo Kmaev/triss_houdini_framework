@@ -1,5 +1,6 @@
 {
     "render_output": "{project}/{sequence}/{shot}/render/{name}/{version}/{name}.$F.exr",
     "cache_output": "{project}/{sequence}/{shot}/sim/{name}/{version}/{format}/{name}.{padding}{format}",
-    "publish_index": "{project}/{sequence}/{shot}/publish/shot_index.json"
+    "publish_index": "{project}/{sequence}/{shot}/publish/shot_index.json",
+    "metadata":"{gallery}/{name}/metadata.json"
 }

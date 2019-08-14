@@ -5,40 +5,6 @@ import json
 import os
 from triss.vendor.Qt import QtWidgets, QtCore
 
-
-# class window(QtWidgets.QWidget):
-#     def __init__(self):
-#         super().__init__()
-
-#         self.resize(500, 500)
-#         self.setWindowTitle('What you want')
-
-#         self.button_01 = QtWidgets.QPushButton("sometimes", self)
-#         self.button_02 = QtWidgets.QPushButton("now", self)
-#         self.edit = QtWidgets.QLineEdit("Write what you want here...")
-
-#         layout = QtWidgets.QVBoxLayout()
-#         layout.addWidget(self.edit)
-#         layout.addWidget(self.button_01)
-#         layout.addWidget(self.button_02)
-
-#         self.setLayout(layout)
-#         self.button_01.clicked.connect(self.message_01)
-#         self.button_02.clicked.connect(self.message_02)
-#     def message_01(self):
-#         print("you push {} button".format(self.button_01.text()))
-#         print("you want  {} {}".format(self.edit.text(), self.button_01.text()))
-#     def message_02(self):
-#         print("you push {} button".format(self.button_02.text()))
-#         print("you want  {}{}".format(self.edit.text(), self.button_02.text()))
-
-# if __name__ == "__main__":
-#     app = QtWidgets.QApplication(sys.argv)
-#     w = window()
-#     w.show()
-#     sys.exit(app.exec_())
-
-
 class ShotListDialog(QtWidgets.QDialog):
     def __init__(self, node, parent=None):
         super(ShotListDialog, self).__init__(parent=parent)
@@ -124,6 +90,14 @@ class ShotListDialog(QtWidgets.QDialog):
             self.onComponentChanged)
 
         self.load_button.clicked.connect(self.onLoad)
+
+        with open(r'E:\code\learn\resources\style.qss', 'r') as f:
+            style = f.read()
+            
+        self.setStyleSheet(style)
+
+        if self.parent():
+            self.parent().setStyleSheet(self.parent().styleSheet())
 
     def getSelection(self, widget):
         selected = widget.selectedItems()

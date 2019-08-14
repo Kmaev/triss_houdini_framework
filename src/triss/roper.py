@@ -1,9 +1,11 @@
 from __future__ import print_function, absolute_import
 from triss import _houdini
+from triss import res
 import hou
 from triss.vendor.Qt import QtWidgets, QtCore
 from triss.vendor import panel
 
+reload(panel)
 reload(_houdini)
 
 # class RoperDialog(QtWidgets.QDialog):
@@ -11,10 +13,24 @@ reload(_houdini)
 
 class RoperDialog(panel.BaseScrollablePanelWidget):
     def __init__(self, title, parent=None):
-        super(RoperDialog, self).__init__(title, parent=parent)
+        super(RoperDialog, self).__init__(title = title, parent=parent)
+
+        self.setObjectName('Roper')
+
+        self.main_layout.setContentsMargins(5, 10, 5, 2)
+
+        self.display_widget = QtWidgets.QWidget()
+
+        self.name = QtWidgets.QLabel()
+        self.name.setText("Choose ROP nodes to render")
+        self.body_layout.addWidget(self.name)
+
 
         check_boxes_layout = QtWidgets.QVBoxLayout()
-        self.body_layout.addLayout(check_boxes_layout)
+        check_boxes_layout.setContentsMargins(3, 20, 3, 20)
+        self.display_widget.setLayout(check_boxes_layout)
+        self.body_layout.addWidget(self.display_widget)
+
 
         self.checks = []
         self.deadline = None
@@ -39,6 +55,15 @@ class RoperDialog(panel.BaseScrollablePanelWidget):
         self.render_button.clicked.connect(self.onRender)
         for i in self.checks:
             i.clicked.connect(self.loadBtn)
+
+        self.load_button.clicked.connect(self.onLoad)
+
+        with open(r'E:\code\learn\resources\style.qss', 'r') as f:
+            style = f.read()
+
+        self.setStyleSheet(style)
+        self.scroll.setStyleSheet(style)
+        self.display_widget.setStyleSheet(style)
 
     def renderList(self):
         return [x.text() for x in self.checks if x.isChecked()]
@@ -73,7 +98,7 @@ dialog = None
 
 def show_houdini():
     global dialog
-    dialog = RoperDialog('Roper', parent=hou.qt.mainWindow())
+    dialog = RoperDialog('Roper v0.1.6', parent=hou.qt.mainWindow())
     dialog.show()
     return dialog
 

@@ -4,7 +4,7 @@ import traceback
 import json
 import hou
 import os
-
+import imp
 
 
 def create_node(name, context, node_type, position):
@@ -50,6 +50,7 @@ def update_name(node, rename=True, force_suffix=True):
     if not node.name().endswith('_geo') and force_suffix:
         node.setName(node.name() + '_geo')
 
+
 def get_output_path(node):
     data = extract_node_data(node)
     template = node.parm("template").eval()
@@ -66,8 +67,9 @@ def get_output_path(node):
     output_path = structure.folder_structure(template, data)
     return output_path
 
+
 def get_rop_output_path(rop):
-    
+
     output_path = get_output_path(rop)
     folder = os.environ.get("OUT")
     cache = os.path.join(folder, output_path)
@@ -206,7 +208,7 @@ def read_assets(node):
 def create_menu(assets):
     result = []
     for asset in assets:
-        # houdini menu expects two values, like "Token" "value" 
+        # houdini menu expects two values, like "Token" "value"
         # thats why we should append twice
         result.append(asset)
         result.append(asset)
@@ -238,12 +240,15 @@ def create_cache_path(node):
     cache_path = read[asset_name]["versions"][version]["components"][file_format]
     return cache_path
 
+
 def onLoad_extract_data(node):
     context = node.parm('context').eval()
     context_data = context.split('/')
-    project, sequence, shot, asset , version, file_format = context_data
-    data = {'project': project, 'sequence' : sequence, 'shot': shot, 'name': asset, 'version': version, 'format': file_format}
+    project, sequence, shot, asset, version, file_format = context_data
+    data = {'project': project, 'sequence': sequence, 'shot': shot,
+            'name': asset, 'version': version, 'format': file_format}
     return data
+
 
 def onLoad_create_path(node):
     data = onLoad_extract_data(node)
@@ -260,9 +265,11 @@ def onLoad_create_path(node):
     cache = cache.replace('\\', '/')
     return cache
 
+
 def onLoad_set_path(node):
     cache = onLoad_create_path(node)
     node.parm('file').set(cache)
+
 
 def change_switch(node):
     if node.parm('context').eval().endswith("abc"):
@@ -271,14 +278,17 @@ def change_switch(node):
         switch = 1
     return switch
 
+
+
 def onLoad_read_comment(node):
     data = onLoad_extract_data(node)
     publish_file = structure.publish_path(data)
-    with open(publish_file, 'r') as read_file: 
+    with open(publish_file, 'r') as read_file:
         file = json.load(read_file)
     asset = data["name"]
-    version =  str(int(data['version'].strip('v')))
+    version = str(int(data['version'].strip('v')))
     comment = file[asset]["versions"][version]['description']
+    print(comment)
     return comment
 
 
@@ -287,7 +297,7 @@ def updateRopNetwork(render_list):
 
     deadline = None
 # check what nodes should be bypassed
-    
+
     for child in out.children():
         if child.name() in render_list:
             bypass_inputs(child, render_list)
@@ -299,16 +309,17 @@ def updateRopNetwork(render_list):
         for output in child.outputs():
             if output.type().name() == 'deadline':
                 deadline = output
-                print("deadline found in child connected nodes. deadline is {}".format(deadline))
+                print(
+                    "deadline found in child connected nodes. deadline is {}".format(deadline))
                 break
         if deadline == None:
             if child.type().name() == 'deadline':
                 deadline = child
                 print("deadline found in out nodes {}".format(deadline))
     if deadline == None:
-        deadline = out.createNode("deadline") 
+        deadline = out.createNode("deadline")
         print("deadline was created {}".format(deadline))
-    
+
     deadline.bypass(False)
 # connect to deadline
     disconnectInputs(deadline)
@@ -320,13 +331,11 @@ def updateRopNetwork(render_list):
                 continue
             deadline.setNextInput(node)
 
-
-
     # deadline.parm("dl_Submit").pressButton()
     return hou.node(deadline.path())
 
-def setDeadline(deadline_node):
 
+def setDeadline(deadline_node):
 
     deadline_node.setCurrent(True)
 
@@ -343,14 +352,127 @@ def check_outputs(node):
         node = node.outputs()[0]
         return check_outputs(node)
 
+
 def bypass_outputs(child, render_list):
     for node in child.outputs():
         if node not in render_list:
             node.bypass(True)
             bypass_outputs(node, render_list)
 
+
 def bypass_inputs(child, render_list):
     for node in child.inputs():
         if node not in render_list:
             node.bypass(True)
             bypass_inputs(node, render_list)
+
+
+def getFileContents(nodes):
+
+    functions = []
+    code = 'import hou\n\n'
+    for i, node in enumerate(nodes):
+        shader_name = node.name()
+        parent = node.parent().path()
+
+        code += node.asCode(function_name=shader_name,
+                            brief=True,
+                            recurse=True)
+        functions.append(shader_name)
+
+        code += 'def load(parent):\n'
+        for func in functions:
+            code += '    {}(parent)\n'.format(func)
+
+    file_contents = {"code": code, "functions": functions, "parent": parent}
+
+    return file_contents
+
+
+def getMetadataFile(gallery, name):
+    out = os.environ.get("OUT")
+
+    data = {"gallery": gallery, "name": name}
+    metadata_file = os.path.join(
+        out, structure.folder_structure("metadata", data))
+
+    metadata_file = os.path.normpath(metadata_file)
+    metadata_file = metadata_file.replace('\\', '/')
+    return metadata_file
+
+
+def save_nodes(gallery, name, nodes, preview=None):
+
+    metadata_file = getMetadataFile(gallery=gallery,
+                                    name=name)
+
+    file_contents = getFileContents(nodes)
+
+    publish_folder = os.path.dirname(metadata_file)
+    if not os.path.isdir(publish_folder):
+        os.makedirs(publish_folder)
+
+    publish_file = os.path.join(publish_folder,
+                                'nodes.py')
+    with open(publish_file, 'w') as f:
+        f.write(file_contents['code'])
+
+    relative_path = os.path.relpath(publish_file, publish_folder)
+
+    saveMetadata(metadata_file=metadata_file,
+                 group_name=name,
+                 parent=file_contents["parent"],
+                 description="test",
+                 preview=preview,
+                 code=relative_path,
+                 tags=file_contents['functions'])
+
+
+def getPreviewPath(gallery, name):
+    metadata_file = getMetadataFile(gallery=gallery,
+                                    name=name)
+    publish_folder = os.path.dirname(metadata_file)
+    preview_folder = os.path.join(publish_folder, 'preview')
+    preview_file = os.path.join(preview_folder, '{}.$F.jpg'.format(name))
+    preview_file = os.path.normpath(preview_file)
+    preview_file = preview_file.replace('\\', '/')
+
+    return preview_file
+
+
+def saveMetadata(metadata_file, group_name, parent, description, preview, code,
+                 tags):
+    data = {"group_name": group_name,
+            "description": description,
+            "preview": preview,
+            "parent": parent,
+            "code": code,
+            "tags": tags}
+
+    with open(metadata_file, "w") as f:
+        json.dump(data, f, indent=4)
+
+
+def load_nodes(gallery, name, parent, elements):
+    # out = os.environ.get("OUT")
+    # shaders_folder = os.path.join(out, 'shaders')
+
+    # file = os.path.join(name, "nodes.py")
+    # publish_file = os.path.join(shaders_folder, file)
+    # publish_file = os.path.normpath(publish_file)
+    # publish_file = publish_file.replace('\\', '/')
+
+    metadata = getMetadataFile(gallery=gallery, name=name)
+    with open(metadata, 'r') as read_file:
+        read = json.load(read_file)
+    code = read["code"]
+    folder = os.path.dirname(metadata)
+    publish_file = os.path.join(folder, code)
+
+    mod = imp.load_source('temp', publish_file)
+
+    for element in elements:
+        func = getattr(mod, element)
+        func(parent)
+
+    # getattr(mod, 'smoke4', )

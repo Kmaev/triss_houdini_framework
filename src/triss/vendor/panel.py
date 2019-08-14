@@ -3,12 +3,14 @@ from hutil.Qt import QtWidgets, QtCore
 
 
 class BaseScrollablePanelWidget(QtWidgets.QDialog):
-    def __init__(self, title, parent=None):
+    def __init__(self, title=None, parent=None):
         super(BaseScrollablePanelWidget, self).__init__(parent=parent)
 
         self.main_layout = QtWidgets.QVBoxLayout(self)
-        self.title = QtWidgets.QLabel('<b>%s</b>' % title)
-        self.setWindowTitle(title)
+
+        if title:
+            self.title = QtWidgets.QLabel('<b>%s</b>' % title)
+            self.setWindowTitle(title)
         self.body_widget = QtWidgets.QWidget(self)
         self.body_layout = QtWidgets.QVBoxLayout(self.body_widget)
         self.body_layout.setSpacing(0)
@@ -34,7 +36,8 @@ class BaseScrollablePanelWidget(QtWidgets.QDialog):
         self.error_lay.addWidget(self.error_lbl)
         self.error_lay.addWidget(self.error_btn)
 
-        self.main_layout.addWidget(self.title)
+        # if title:
+            # self.main_layout.addWidget(self.title)
         self.main_layout.addWidget(self.scroll)
         self.main_layout.addWidget(self.error_wid)
 
