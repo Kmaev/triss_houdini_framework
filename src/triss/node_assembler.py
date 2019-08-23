@@ -2,7 +2,7 @@ from __future__ import print_function, absolute_import
 
 import hou
 import os
-from triss.vendor.Qt import QtWidgets, QtCore
+from Qt import QtWidgets, QtCore
 from triss.vendor import panel
 
 

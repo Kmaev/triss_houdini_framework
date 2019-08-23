@@ -2,7 +2,8 @@ from __future__ import print_function, absolute_import
 from triss import _houdini
 from triss import res
 import hou
-from triss.vendor.Qt import QtWidgets, QtCore
+import os
+from Qt import QtWidgets, QtCore
 from triss.vendor import panel
 
 reload(panel)
@@ -58,7 +59,8 @@ class RoperDialog(panel.BaseScrollablePanelWidget):
 
         self.load_button.clicked.connect(self.onLoad)
 
-        with open(r'E:\code\learn\resources\style.qss', 'r') as f:
+        style_folder = os.environ.get("STYLE_TRISS")
+        with open(os.path.join(style_folder, "style_hou.qss"), 'r') as f:
             style = f.read()
 
         self.setStyleSheet(style)

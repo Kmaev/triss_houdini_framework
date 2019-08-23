@@ -1,5 +1,5 @@
 from __future__ import print_function
-from triss.vendor.Qt import QtWidgets, QtCore, QtGui
+from Qt import QtWidgets, QtCore, QtGui
 from triss.vendor import flow_layout
 from triss import _houdini
 from triss import res
@@ -74,7 +74,8 @@ class PublishDialog(QtWidgets.QDialog):
         self.do_flipbook.toggled.connect(self.start_frame.setEnabled)
         self.do_flipbook.toggled.connect(self.end_frame.setEnabled)
 
-        with open(r'E:\code\learn\resources\style.qss', 'r') as f:
+        style_folder = os.environ.get("STYLE_TRISS")
+        with open(os.path.join(style_folder, "style_hou.qss"), 'r') as f:
             self.setStyleSheet(f.read())
 
     def addGalleries(self):

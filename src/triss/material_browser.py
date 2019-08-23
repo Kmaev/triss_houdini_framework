@@ -1,7 +1,7 @@
 from __future__ import print_function
-from triss.vendor.Qt import QtWidgets, QtCore, QtGui
-from triss.vendor import flow_layout
-from triss.vendor import clique
+from Qt import QtWidgets, QtCore, QtGui
+import clique
+import flow_layout
 from triss import _houdini
 import json
 import hou
@@ -10,7 +10,7 @@ from triss import res
 
 reload(_houdini)
 
-NOPREVIEW_PATH = r'E:\pipeline\modules\triss\1.0.0\resources\images\no-thumb.png'
+NOPREVIEW_PATH = os.path.join(os.environ.get("STYLE_TRISS"), "images/no-thumb.png")
 
 
 class MaterialListDialog(QtWidgets.QDialog):
@@ -77,7 +77,8 @@ class MaterialListDialog(QtWidgets.QDialog):
         self.central_layout.addWidget(self.load_button)
 
         self.load_button.clicked.connect(self.onLoad)
-        with open(r'E:\code\learn\resources\style.qss', 'r') as f:
+        style_folder = os.environ.get("STYLE_TRISS")
+        with open(os.path.join(style_folder, "style_hou.qss"), 'r') as f:
             style = f.read()
 
         # self.flow_widget.setStyleSheet(style)

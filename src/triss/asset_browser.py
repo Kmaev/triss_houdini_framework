@@ -3,14 +3,20 @@ from triss import structure
 import sys
 import json
 import os
-from triss.vendor.Qt import QtWidgets, QtCore
+from Qt import QtWidgets, QtCore, QtGui
+
 
 class ShotListDialog(QtWidgets.QDialog):
     def __init__(self, node, parent=None):
         super(ShotListDialog, self).__init__(parent=parent)
 
         project_file = os.environ.get("PROJECTS_INDEX_PATH")
+        style_folder = os.environ.get("STYLE_TRISS")
+        
         self.setWindowTitle('TRISS')
+        logo = os.path.join(style_folder, "images/triss_logo/app_logo.png")
+        self.setWindowIcon(QtGui.QIcon(logo))
+
         self.node = node
         with open(project_file, "r") as read_file:
             self.read = json.load(read_file)
@@ -91,9 +97,18 @@ class ShotListDialog(QtWidgets.QDialog):
 
         self.load_button.clicked.connect(self.onLoad)
 
-        with open(r'E:\code\learn\resources\style.qss', 'r') as f:
+        if not self.node:
+            self.load_button.hide()
+
+        if not self.node:
+            style_file = os.path.join(style_folder, "style.qss")
+        else:
+            style_file = os.path.join(style_folder, "style_hou.qss")
+        
+        with open(style_file, 'r') as f:
             style = f.read()
-            
+
+
         self.setStyleSheet(style)
 
         if self.parent():
@@ -169,11 +184,12 @@ class ShotListDialog(QtWidgets.QDialog):
             with open(path, "r") as read_shot_index:
                 shot_index = json.load(read_shot_index)
             self.shot_index = shot_index
-        except IOError as e:
+        except IOError:
             self.description_box.setPlainText(
                 "No published elements for this shot")
-            raise RuntimeError("No published elements for this shot")
-
+            return
+        else:
+            self.description_box.setPlainText('')
         assets = shot_index.keys()
         for i in assets:
             self.asset_list.addItem(i)
@@ -222,7 +238,7 @@ class ShotListDialog(QtWidgets.QDialog):
         version = "v{}".format((version).zfill(3))
         component = self.selectedComponent()
         context = "{}/{}/{}/{}/{}/{}".format(project,
-                                             sequence, shot, asset, 
+                                             sequence, shot, asset,
                                              version, component)
         node.setParms({"context": context})
         self.close()
@@ -248,6 +264,6 @@ def show_houdini(node):
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    w = ShotListDialog()
+    w = ShotListDialog(None)
     w.show()
     sys.exit(app.exec_())

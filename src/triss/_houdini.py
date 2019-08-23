@@ -169,8 +169,8 @@ def json_data_publisher(node):
 
 def publish(node):
     cache_parm = node.parm("file_output")
-    start_frame = int(node.parm("f0").eval())
-    end_frame = int(node.parm("f1").eval() + 1)
+    start_frame = int(node.parm("f1").eval())
+    end_frame = int(node.parm("f2").eval() + 1)
     frame_range = range(start_frame, end_frame)
     json_data_publisher(node)
     cache_exists = cache_validator(node, "file_output", frame_range)
