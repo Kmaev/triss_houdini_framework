@@ -39,6 +39,7 @@ def create_rop_node(node):
 
     reference_path = geo.path()
     node.setParms({"rop_link": reference_path})
+    node.setColor(hou.Color((0.78,0.41,0.003)))
     geo.setParms({"sop_path": reference_object})
 
 
@@ -131,8 +132,7 @@ def json_data_publisher(node):
 
     menu_index = node.parm("data_format").eval()
     file_format = node.parm("data_format").menuItems()[menu_index]
-    cache = get_output_path(node)
-
+    cache = get_output_path(node) 
     with open(project_file, "r") as read_file:
         read = json.load(read_file)
     if asset_name not in read:
@@ -174,12 +174,17 @@ def publish(node):
     frame_range = range(start_frame, end_frame)
     json_data_publisher(node)
     cache_exists = cache_validator(node, "file_output", frame_range)
-    print(cache_exists)
     if cache_exists is False:
         node.parm("execute").pressButton()
     if not cache_parm.isAtDefault():
         cache_parm.revertToAndRestorePermanentDefaults()
 
+def reloadCache():
+    node = hou.pwd()
+    for child in node.children():
+        for parm in child.parms():
+            if parm.name() == "reload":
+                parm.pressButton()
 
 def catch_menu_exceptions(func):
     def wrapper(*args, **kwargs):
@@ -237,7 +242,10 @@ def create_cache_path(node):
     asset_index = node.parm("name").eval()
     asset_name = node.parm("name").menuItems()[asset_index]
     version = str(node.parm("version").eval())
-    cache_path = read[asset_name]["versions"][version]["components"][file_format]
+    try:
+        cache_path = read[asset_name]["versions"][version]["components"][file_format]
+    except Exception:
+        return ''
     return cache_path
 
 
@@ -251,7 +259,11 @@ def onLoad_extract_data(node):
 
 
 def onLoad_create_path(node):
-    data = onLoad_extract_data(node)
+    try:
+        data = onLoad_extract_data(node)
+    except Exception:
+        return ''
+
     if data['format'].lower() == 'abc':
         data['padding'] = ''
     else:
@@ -288,7 +300,6 @@ def onLoad_read_comment(node):
     asset = data["name"]
     version = str(int(data['version'].strip('v')))
     comment = file[asset]["versions"][version]['description']
-    print(comment)
     return comment
 
 
@@ -371,6 +382,7 @@ def getFileContents(nodes):
 
     functions = []
     code = 'import hou\n\n'
+    print(nodes)
     for i, node in enumerate(nodes):
         shader_name = node.name()
         parent = node.parent().path()
@@ -421,6 +433,7 @@ def save_nodes(gallery, name, nodes, description, preview=None):
     relative_path = os.path.relpath(publish_file, publish_folder)
 
     saveMetadata(metadata_file=metadata_file,
+                 gallery=gallery,
                  group_name=name,
                  parent=file_contents["parent"],
                  description= description,
@@ -441,9 +454,10 @@ def getPreviewPath(gallery, name):
     return preview_file
 
 
-def saveMetadata(metadata_file, group_name, parent, description, preview, code,
+def saveMetadata(metadata_file, gallery, group_name, parent, description, preview, code,
                  tags):
-    data = {"group_name": group_name,
+    data = {"gallery" : gallery,
+            "group_name": group_name,
             "description": description,
             "preview": preview,
             "parent": parent,

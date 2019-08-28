@@ -10,7 +10,9 @@ from triss import res
 
 reload(_houdini)
 
-NOPREVIEW_PATH = os.path.join(os.environ.get("STYLE_TRISS"), "images/no-thumb.png")
+NOPREVIEW_PATH = os.path.join(os.environ.get(
+    "STYLE_TRISS"), "images/no-thumb.png")
+out = os.environ.get("OUT")
 
 
 class MaterialListDialog(QtWidgets.QDialog):
@@ -18,13 +20,12 @@ class MaterialListDialog(QtWidgets.QDialog):
         super(MaterialListDialog, self).__init__(parent=parent)
 
         self.resize(850, 600)
-        #self.resize(0,0)
+        # self.resize(0,0)
         self.setWindowTitle('Material Browser v0.1.6')
 
         # Variable initialization
-        out = os.environ.get("OUT")
 
-        self.gallery = os.path.join(out, 'shaders')
+        self.gallery = 'shaders'
         self.material_labels = []
 
         # CENTRAL layout
@@ -32,17 +33,26 @@ class MaterialListDialog(QtWidgets.QDialog):
         self.setLayout(self.central_layout)
         self.central_layout.setContentsMargins(7, 7, 7, 7)
 
-        self.title_layout = QtWidgets.QHBoxLayout()
-        self.title_layout.setContentsMargins(6, 0, 1, 0)
+        self.title_layout = QtWidgets.QVBoxLayout()
+        self.title_layout.setContentsMargins(0, 0, 1, 0)
         self.title_groups = QtWidgets.QLabel(
             'Shader groups available to import')
         self.title_layout.addWidget(self.title_groups)
+
+        self.gallery_combo = QtWidgets.QComboBox()
+
+        gallery_list = ['shaders', 'sop_presets']
+
+        for i in gallery_list:
+            self.gallery_combo.addItem(i, i)
+        self.gallery_combo.currentIndexChanged.connect(self.onGalleryChanged)
+
+        self.title_layout.addWidget(self.gallery_combo)
 
         self.central_layout.addLayout(self.title_layout)
 
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
         self.splitter.setContentsMargins(10, 10, 10, 10)
-
 
         self.central_layout.addWidget(self.splitter)
 
@@ -57,21 +67,11 @@ class MaterialListDialog(QtWidgets.QDialog):
         self.scroll_area.setWidget(self.flow_widget)
         self.splitter.addWidget(self.scroll_area)
 
-
         # DISPLAY WIDGET layout , right side
         self.display_widget = DisplayWidget()
         self.splitter.addWidget(self.display_widget)
 
         self.splitter.setSizes([300, 300])
-
-        # POPULATE flow layout
-        for shader_folder in os.listdir(self.gallery):
-            new_widget = MaterialLabel(gallery=self.gallery,
-                                       shader_name=shader_folder)
-            new_widget.onSelected.connect(self.onLabelSelected)
-
-            self.material_labels.append(new_widget)
-            self.flow_layout.addWidget(new_widget)
 
         self.load_button = QtWidgets.QPushButton('Load selected')
         self.central_layout.addWidget(self.load_button)
@@ -81,13 +81,42 @@ class MaterialListDialog(QtWidgets.QDialog):
         with open(os.path.join(style_folder, "style_hou.qss"), 'r') as f:
             style = f.read()
 
-        # self.flow_widget.setStyleSheet(style)
-        # self.display_widget.setStyleSheet(style)
-        # self.scroll_area.setStyleSheet(style)
         self.setStyleSheet(style)
+        self.display_widget.style = style
 
         if self.parent():
             self.parent().setStyleSheet(self.parent().styleSheet())
+
+        self.onGalleryChanged(0)
+
+    def onGalleryChanged(self, index):
+        sel = self.gallery_combo.itemData(index)
+        self.gallery = sel
+        self.populateMaterialLabels(gallery=sel)
+        self.display_widget.current_combo.clear()
+        self.display_widget.selection = []
+
+        self.display_widget.setCompleterForGallery(self.gallery)
+        self.display_widget.parent_edit.setText('')
+        self.display_widget.setCurrent(None)
+
+    def populateMaterialLabels(self, gallery):
+        while self.flow_layout.count() > 0:
+            item = self.flow_layout.takeAt(0)
+            if not item:
+                continue
+
+            w = item.widget()
+            if w:
+                w.deleteLater()
+
+        for shader_folder in os.listdir(os.path.join(out, gallery)):
+            new_widget = MaterialLabel(gallery=gallery,
+                                       shader_name=shader_folder)
+            new_widget.onSelected.connect(self.onLabelSelected)
+
+            self.material_labels.append(new_widget)
+            self.flow_layout.addWidget(new_widget)
 
     def onLoad(self):
 
@@ -99,19 +128,26 @@ class MaterialListDialog(QtWidgets.QDialog):
                     for key, value in elements.items():
                         if value is True:
                             _elements.append(key)
-                    _houdini.load_nodes(
-                        gallery="shaders",
-                        name=widget.label.text(),
-                        parent=hou.node("/shop/"),
-                        elements=_elements
-                    )
+                    parent = hou.node(self.display_widget.parent_edit.text())
+                    if parent is None:
+                        if self.gallery == "shaders":
+                            parent = hou.node("/shop")
+                        elif not parent:
+
+                            message = ('Must specify a parent for '
+                                       'non-shader presets')
+                            QtWidgets.QMessageBox.critical(
+                                self, 'Error', message,)
+                            raise RuntimeError(message)
+                    else:
+                        _houdini.load_nodes(
+                            gallery=self.gallery,
+                            name=widget.label.text(),
+                            parent=parent,
+                            elements=_elements
+                        )
 
         return
-        for widget in self.material_labels:
-            if widget.selected:
-                print('Loading', widget.label.text())
-                _houdini.load_nodes(
-                    "shaders", widget.label.text(), hou.node("/shop/"), 'all')
 
     def onLabelSelected(self, matlabelwidget):
         self.display_widget.onSelectionChanged(matlabelwidget=matlabelwidget)
@@ -129,6 +165,7 @@ class DisplayWidget(QtWidgets.QFrame):
         self.checks = {}
         self.current_fb_frame = 0
         self.current = None
+        self.style = ''
 
         self.thumb_label = QtWidgets.QLabel()
         self.seq_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
@@ -140,10 +177,18 @@ class DisplayWidget(QtWidgets.QFrame):
         self.info_edit = QtWidgets.QTextEdit()
         self.info_edit.setReadOnly(True)
 
+        # ESTO ES DE SALVA
+        self.parent_edit = QtWidgets.QLineEdit()
+        self.parent_edit.setPlaceholderText(
+            "Write parent node here: '/obj/my_geometry'")
+
+        # A PARTIR DE AQUI NO ES DE SALVA
+
         self.central_layout.addWidget(self.thumb_label)
 
         self.central_layout.addWidget(self.seq_slider)
-        self.central_layout.addWidget(self.items_list)
+        self.central_layout.addWidget(self.parent_edit)
+        # self.central_layout.addWidget(self.items_list)
         self.central_layout.addWidget(self.current_combo)
         self.central_layout.addWidget(self.info_edit)
         self.central_layout.addWidget(self.item_selection)
@@ -155,11 +200,25 @@ class DisplayWidget(QtWidgets.QFrame):
                                          QtCore.Qt.AlignCenter)
 
         self.current_combo.currentIndexChanged.connect(self.onComboChanged)
-        self.seq_slider.valueChanged[int].connect(self.onSldierValueChanged)
+        self.seq_slider.valueChanged[int].connect(self.onSliderValueChanged)
 
         self.setCurrent(None)
 
-    def onSldierValueChanged(self, value):
+    def setCompleterForGallery(self, gallery):
+        if gallery == "shaders":
+            allowed = ('shopnet', 'shop')
+        if gallery == "sop_presets":
+            allowed = ('subnet', 'geo')
+
+        nodes = sorted([x.path() for x in hou.node('/').recursiveGlob('*')
+                        if x.type().name() in allowed])
+
+        completer = QtWidgets.QCompleter(list(nodes))
+        completer.popup().setObjectName('completer')
+        completer.popup().setStyleSheet(self.style)
+        self.parent_edit.setCompleter(completer)
+
+    def onSliderValueChanged(self, value):
         self.current_fb_frame = value
 
         preview = self.current.metadata['preview']
@@ -221,8 +280,6 @@ class DisplayWidget(QtWidgets.QFrame):
                                        matlabelwidget)
 
     def populateItemSelectionCombo(self, index):
-        # self.item_selection_combo.clear()
-        # clean layout
         while self.check_box_layout.count() > 0:
             item = self.check_box_layout.takeAt(0)
             if not item:

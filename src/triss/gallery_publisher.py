@@ -94,7 +94,10 @@ class PublishDialog(QtWidgets.QDialog):
 
         # Get a copy of the flipbook options
         flipbook_settings = scene.flipbookSettings().stash()
-        flipbook_settings.frameRange((1, 10))
+        start=float(self.start_frame.text())
+        end = float(self.end_frame.text())
+        frames = hou.Vector2(start, end)
+        flipbook_settings.frameRange((frames))
         preview_file = _houdini.getPreviewPath(
             self.gallery, self.group_name.text())
         preview_folder = os.path.dirname(preview_file)

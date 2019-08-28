@@ -54,7 +54,8 @@ QComboBox::drop-down  {
 
 QComboBox QAbstractItemView {
     border: 1px solid #262626;
-    selection-background-color: #666666;
+    selection-background-color: #262626;
+    selection-color: white;
 }
 
 QSplitter {
@@ -69,7 +70,20 @@ QTextEdit, QLineEdit, QSpinBox {
     border: none;
     border-radius: 3px;
 }
+QAbstractItemView#completer {
+    background-color: #434343;
+    background-color: #4b4b4b;
+    selection-background-color: #262626;
+    color: white;
+    font-family: "Calibri Regular";
+    font: 13px;
+    border: 1px solid #262626;
+    outline: 0;
+}
+/*QAbstractItemView#completer::item:hover:!selected{
+    background-color: #262626;
 
+}*/
 QCheckBox {
     width: 10px;
     height: 10px;
