@@ -45,6 +45,7 @@ class MaterialListDialog(QtWidgets.QDialog):
 
         for i in gallery_list:
             self.gallery_combo.addItem(i, i)
+
         self.gallery_combo.currentIndexChanged.connect(self.onGalleryChanged)
 
         self.title_layout.addWidget(self.gallery_combo)
@@ -88,6 +89,10 @@ class MaterialListDialog(QtWidgets.QDialog):
             self.parent().setStyleSheet(self.parent().styleSheet())
 
         self.onGalleryChanged(0)
+
+    # def onGalleryChanged(self, index):
+    #     import cProfile
+    #     cProfile.runctx('self._onGalleryChanged(index)', globals(), locals(), sort='tcumtime')
 
     def onGalleryChanged(self, index):
         sel = self.gallery_combo.itemData(index)
@@ -210,7 +215,7 @@ class DisplayWidget(QtWidgets.QFrame):
         if gallery == "sop_presets":
             allowed = ('subnet', 'geo')
 
-        nodes = sorted([x.path() for x in hou.node('/').recursiveGlob('*')
+        nodes = sorted([x.path() for x in hou.node('/').allSubChildren(True, False)
                         if x.type().name() in allowed])
 
         completer = QtWidgets.QCompleter(list(nodes))
@@ -227,7 +232,8 @@ class DisplayWidget(QtWidgets.QFrame):
         preview_folder = os.path.dirname(preview)
 
         img_list = os.listdir(preview_folder)
-        collections, remainder = clique.assemble(img_list, minimum_items=1)
+        patterns = [r'\.(?P<index>(?P<padding>0*)\d+)']
+        collections, remainder = clique.assemble(img_list, minimum_items=1, patterns=patterns)
         if collections:
             thumb = list(collections[0])[self.current_fb_frame]
             if thumb:
@@ -312,8 +318,6 @@ class DisplayWidget(QtWidgets.QFrame):
 
         for check, val in deferred.items():
             check.setChecked(val)
-
-        # self.item_selection_combo.addItem(i,i)
 
     def getCheckboxes(self):
         cbs = []
@@ -406,7 +410,15 @@ class MaterialLabel(QtWidgets.QFrame):
         self.central_layout.setSpacing(0)
 
         # PIXMAP
-        pixmap = QtGui.QPixmap(self.metadata['preview'])
+        img = QtGui.QImage(self.metadata['preview'])
+        if img.height() != img.width():
+            resize = img.width() / 2
+            start = resize / 2
+
+            pixmap = QtGui.QPixmap(img.copy(start, 0, resize, resize))
+
+        else:
+            pixmap = QtGui.QPixmap(img)
         if pixmap.isNull():
             pixmap = QtGui.QPixmap(r'')
 
@@ -422,6 +434,7 @@ class MaterialLabel(QtWidgets.QFrame):
 
         # LABEL
         self.label = QtWidgets.QLabel()
+        self.label.setMaximumSize(size)
         self.label.setText(shader_name)
         self.label.setAlignment(QtCore.Qt.AlignCenter)
 
@@ -433,8 +446,6 @@ class MaterialLabel(QtWidgets.QFrame):
         self.image_label.setAttribute(QtCore.Qt.WA_TranslucentBackground)
 
     def mousePressEvent(self, event):
-        # print('Click', self.label.text())
-
         if self.selected:
             self.setSelected(False)
         else:
@@ -458,8 +469,15 @@ class MaterialLabel(QtWidgets.QFrame):
             self.preview_available = False
         else:
             img_list = os.listdir(preview)
-            collections, remainder = clique.assemble(img_list, minimum_items=1)
-            self.preview_available = True
+            patterns = [r'\.(?P<index>(?P<padding>0*)\d+)']
+            collections, remainder = clique.assemble(img_list,
+                                                     minimum_items=1,
+                                                     patterns=patterns)
+            if len(list(collections[0])) <= 1:
+                self.preview_available = False
+
+            else:
+                self.preview_available = True
             thumb = None
 
             if collections:

@@ -4,7 +4,7 @@ from triss.vendor import flow_layout
 from triss import _houdini
 from triss import res
 import hou
-# Houdini helper module
+
 import stateutils
 import os
 reload(_houdini)
@@ -35,7 +35,6 @@ class PublishDialog(QtWidgets.QDialog):
 
         self.settings_grp = QtWidgets.QGroupBox('Export settings')
         self.settings_layout = QtWidgets.QVBoxLayout(self.settings_grp)
-        # self.settings_layout.setSpacing(0)
         self.settings_layout.setContentsMargins(0, 5, 0, 5)
 
         self.group_name = QtWidgets.QLineEdit()
@@ -53,6 +52,8 @@ class PublishDialog(QtWidgets.QDialog):
         self.start_frame.setValue(int(hou.expandString('$FSTART')))
         self.end_frame.setValue(int(hou.expandString('$FEND')))
 
+        self.do_render = QtWidgets.QCheckBox('Save render for preview')
+
         self.flipbook_layout = QtWidgets.QHBoxLayout()
         self.flipbook_layout.addWidget(self.do_flipbook)
         self.flipbook_layout.addWidget(self.start_frame)
@@ -61,6 +62,7 @@ class PublishDialog(QtWidgets.QDialog):
         self.settings_layout.addWidget(self.group_name)
         self.settings_layout.addWidget(self.description)
         self.settings_layout.addLayout(self.flipbook_layout)
+        self.settings_layout.addWidget(self.do_render)
 
         self.publish_button = QtWidgets.QPushButton('Publish')
 
@@ -94,7 +96,7 @@ class PublishDialog(QtWidgets.QDialog):
 
         # Get a copy of the flipbook options
         flipbook_settings = scene.flipbookSettings().stash()
-        start=float(self.start_frame.text())
+        start = float(self.start_frame.text())
         end = float(self.end_frame.text())
         frames = hou.Vector2(start, end)
         flipbook_settings.frameRange((frames))
@@ -114,18 +116,72 @@ class PublishDialog(QtWidgets.QDialog):
             _houdini.getMetadataFile(self.gallery, self.group_name.text()))
         self.preview_file = os.path.relpath(preview_file, publish_folder)
 
+    def setRenderPreview(self):
+        preview_file = _houdini.getPreviewPath(
+            self.gallery, self.group_name.text())
+        preview_file = os.path.normpath(preview_file)
+        preview_file = preview_file.replace('\\', '/')
+
+        preview_folder = os.path.dirname(preview_file)
+
+        publish_folder = os.path.dirname(
+            _houdini.getMetadataFile(self.gallery, self.group_name.text()))
+        self.preview_file = os.path.relpath(preview_file, publish_folder)
+
+        if not os.path.isdir(preview_folder):
+            os.makedirs(preview_folder)
+        return preview_file
+
+    def doRender(self):
+        render_tab = _houdini.getRenderTab()
+
+        if not render_tab.planes():
+            #this is temp later it will be changed for proper error window
+            message = "No preview available, replace preview with default image?"
+            message_box = QtWidgets.QMessageBox.question(
+                self,
+                "Error",
+                message,
+                QtWidgets.QMessageBox.Ok |
+                QtWidgets.QMessageBox.Cancel)
+
+            if message_box == QtWidgets.QMessageBox.Ok:
+                return
+            if message_box == QtWidgets.QMessageBox.Cancel:
+                raise AttributeError("To be able to add any preview run render on Render View")
+            #end of temp
+
+        if render_tab.planes():
+            preview_file = self.setRenderPreview()
+            render_tab.saveFrame(preview_file)
+        if not hou.selectedNodes():
+            message = ('No nodes selected')
+            QtWidgets.QMessageBox.critical(self, 'Error', message,)
+        else:
+            return
+
+
     def publish(self):
         nodes = hou.selectedNodes()
 
         if self.gallery is not None and self.group_name.text():
             if self.do_flipbook.isChecked():
                 self.doFlipbook()
-            _houdini.save_nodes(gallery=self.gallery,
-                                name=self.group_name.text(),
-                                nodes=nodes,
-                                description=self.description.toPlainText(),
-                                preview=self.preview_file)
-            self.close()
+                self.do_render.setDisabled(True)
+            if self.do_render.isChecked():
+                self.doRender()
+
+            if hou.selectedNodes():
+                _houdini.save_nodes(gallery=self.gallery,
+                                    name=self.group_name.text(),
+                                    nodes=nodes,
+                                    description=self.description.toPlainText(),
+                                    preview=self.preview_file)
+                self.close()
+            else:
+                message = ('No nodes selected')
+                QtWidgets.QMessageBox.critical(self, 'Error', message,)
+                raise RuntimeError(message)
 
 
 dialog = None

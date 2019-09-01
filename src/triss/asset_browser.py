@@ -144,6 +144,7 @@ class ShotListDialog(QtWidgets.QDialog):
         if not project:
             return
         sequences = self.read[project]["sequences"]
+        sequences = sorted(sequences)
         for i in sequences:
             self.seq_list.addItem(i)
 
@@ -157,6 +158,7 @@ class ShotListDialog(QtWidgets.QDialog):
             return
 
         shots = self.read[project]["sequences"][sequence]["shots"]
+        shots = sorted(shots)
         for i in shots:
             self.shot_list.addItem(i)
 
@@ -201,6 +203,7 @@ class ShotListDialog(QtWidgets.QDialog):
 
         asset = self.selectedAsset()
         version = self.shot_index[asset]["versions"]
+        version = sorted(version)
         for i in version:
             self.version_list.addItem(i)
 
@@ -215,6 +218,7 @@ class ShotListDialog(QtWidgets.QDialog):
         version = self.selectedVersion()
 
         components = self.shot_index[asset]["versions"][version]["components"]
+
         for i in components:
             self.component_list.addItem(i)
 

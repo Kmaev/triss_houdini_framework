@@ -83,7 +83,7 @@ class RoperDialog(panel.BaseScrollablePanelWidget):
     def getRopNodes(self):
         out = hou.node('/out')
         out_nodes = []
-        nodes_for_render = ["out_bake_geo", "geometry"]
+        nodes_for_render = ["out_bake_geo", "geometry", "arnold"]
         for i in out.children():
             if i.type().name() not in nodes_for_render:
                 continue
@@ -92,7 +92,7 @@ class RoperDialog(panel.BaseScrollablePanelWidget):
 
     def onRender(self):
         self.deadline.parm("dl_Submit").pressButton()
-        self.close()
+        #self.close()
 
 
 dialog = None

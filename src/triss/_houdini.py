@@ -246,6 +246,11 @@ def create_cache_path(node):
         cache_path = read[asset_name]["versions"][version]["components"][file_format]
     except Exception:
         return ''
+    folder = os.environ.get("OUT")
+    cache = os.path.join(folder, cache_path)
+    cache = os.path.normpath(cache)
+    cache = cache.replace('\\', '/')
+    cache_path = cache
     return cache_path
 
 
@@ -295,11 +300,15 @@ def change_switch(node):
 def onLoad_read_comment(node):
     data = onLoad_extract_data(node)
     publish_file = structure.publish_path(data)
+    publish_file = os.path.normpath(publish_file)
+    publish_file = publish_file.replace('\\', '/')
+
     with open(publish_file, 'r') as read_file:
         file = json.load(read_file)
     asset = data["name"]
     version = str(int(data['version'].strip('v')))
     comment = file[asset]["versions"][version]['description']
+    print(comment)
     return comment
 
 
@@ -382,7 +391,6 @@ def getFileContents(nodes):
 
     functions = []
     code = 'import hou\n\n'
-    print(nodes)
     for i, node in enumerate(nodes):
         shader_name = node.name()
         parent = node.parent().path()
@@ -414,7 +422,6 @@ def getMetadataFile(gallery, name):
 
 
 def save_nodes(gallery, name, nodes, description, preview=None):
-
     metadata_file = getMetadataFile(gallery=gallery,
                                     name=name)
 
@@ -490,4 +497,16 @@ def load_nodes(gallery, name, parent, elements):
         func = getattr(mod, element)
         func(parent)
 
-    # getattr(mod, 'smoke4', )
+
+def getRenderTab():
+    found = None
+
+    for pane in hou.ui.panes():
+        if found:
+            break
+        for tab in pane.tabs():
+            if isinstance(tab, hou.IPRViewer):
+                found = tab
+                break
+
+    return found
