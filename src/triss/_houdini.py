@@ -226,7 +226,7 @@ def create_assets_menu(node):
     return assets_list
 
 
-def get_version(node):
+def get_version(node): #used inside houdini to get max version for import geo
     read = read_assets(node)
     asset_index = node.parm("name").eval()
     asset_name = node.parm("name").menuItems()[asset_index]
@@ -253,6 +253,18 @@ def create_cache_path(node):
     cache_path = cache
     return cache_path
 
+def read_comment(node):
+    file_index = node.parm("file_format").eval()
+    file_format = node.parm("file_format").menuItems()[file_index]
+    read = read_assets(node)
+    asset_index = node.parm("name").eval()
+    asset_name = node.parm("name").menuItems()[asset_index]
+    version = str(node.parm("version").eval())
+    try:
+        comment = read[asset_name]["versions"][version]["description"]
+    except Exception:
+        return ''
+    return comment
 
 def onLoad_extract_data(node):
     context = node.parm('context').eval()
@@ -308,7 +320,6 @@ def onLoad_read_comment(node):
     asset = data["name"]
     version = str(int(data['version'].strip('v')))
     comment = file[asset]["versions"][version]['description']
-    print(comment)
     return comment
 
 
