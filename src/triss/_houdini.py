@@ -132,7 +132,9 @@ def json_data_publisher(node):
 
     menu_index = node.parm("data_format").eval()
     file_format = node.parm("data_format").menuItems()[menu_index]
-    cache = get_output_path(node) 
+    cache = get_output_path(node)
+    hipfile = hou.hipFile.name()
+
     with open(project_file, "r") as read_file:
         read = json.load(read_file)
     if asset_name not in read:
@@ -162,6 +164,7 @@ def json_data_publisher(node):
                 raise RuntimeError('Component already exists')
 
     read[asset_name]["versions"][version]["description"] = comment
+    read[asset_name]["versions"][version]["hipfile"] = hipfile
     read[asset_name]["versions"][version]['components'][file_format] = cache
     with open(project_file, 'w') as output_file:
         json.dump(read, output_file, indent=4)
@@ -178,6 +181,7 @@ def publish(node):
         node.parm("execute").pressButton()
     if not cache_parm.isAtDefault():
         cache_parm.revertToAndRestorePermanentDefaults()
+    hou.hipFile.saveAndIncrementFileName()
 
 def reloadCache():
     node = hou.pwd()
@@ -319,8 +323,10 @@ def onLoad_read_comment(node):
         file = json.load(read_file)
     asset = data["name"]
     version = str(int(data['version'].strip('v')))
+    hipfile = file[asset]["versions"][version]['hipfile']
     comment = file[asset]["versions"][version]['description']
-    return comment
+    display_comment = '{}\n\nPublished from scene: {}'.format(comment, hipfile)
+    return display_comment
 
 
 def updateRopNetwork(render_list):
