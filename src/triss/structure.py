@@ -14,6 +14,8 @@ def get_template(name):
 
 def folder_structure(template, data):
     template_data = get_template(name=template)
+    template_data = os.path.expandvars(template_data)
+
     try:
         path = template_data.format(**data)
     except KeyError as e:

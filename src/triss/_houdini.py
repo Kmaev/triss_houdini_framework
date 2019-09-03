@@ -39,7 +39,7 @@ def create_rop_node(node):
 
     reference_path = geo.path()
     node.setParms({"rop_link": reference_path})
-    node.setColor(hou.Color((0.78,0.41,0.003)))
+    node.setColor(hou.Color((0.78, 0.41, 0.003)))
     geo.setParms({"sop_path": reference_object})
 
 
@@ -183,12 +183,14 @@ def publish(node):
         cache_parm.revertToAndRestorePermanentDefaults()
     hou.hipFile.saveAndIncrementFileName()
 
+
 def reloadCache():
     node = hou.pwd()
     for child in node.children():
         for parm in child.parms():
             if parm.name() == "reload":
                 parm.pressButton()
+
 
 def catch_menu_exceptions(func):
     def wrapper(*args, **kwargs):
@@ -230,7 +232,7 @@ def create_assets_menu(node):
     return assets_list
 
 
-def get_version(node): #used inside houdini to get max version for import geo
+def get_version(node):  # used inside houdini to get max version for import geo
     read = read_assets(node)
     asset_index = node.parm("name").eval()
     asset_name = node.parm("name").menuItems()[asset_index]
@@ -257,6 +259,7 @@ def create_cache_path(node):
     cache_path = cache
     return cache_path
 
+
 def read_comment(node):
     file_index = node.parm("file_format").eval()
     file_format = node.parm("file_format").menuItems()[file_index]
@@ -269,6 +272,7 @@ def read_comment(node):
     except Exception:
         return ''
     return comment
+
 
 def onLoad_extract_data(node):
     context = node.parm('context').eval()
@@ -310,7 +314,6 @@ def change_switch(node):
     else:
         switch = 1
     return switch
-
 
 
 def onLoad_read_comment(node):
@@ -448,7 +451,6 @@ def save_nodes(gallery, name, nodes, description, preview=None):
     if not os.path.isdir(publish_folder):
         os.makedirs(publish_folder)
 
-
     publish_file = os.path.join(publish_folder,
                                 'nodes.py')
     with open(publish_file, 'w') as f:
@@ -460,7 +462,7 @@ def save_nodes(gallery, name, nodes, description, preview=None):
                  gallery=gallery,
                  group_name=name,
                  parent=file_contents["parent"],
-                 description= description,
+                 description=description,
                  preview=preview,
                  code=relative_path,
                  tags=file_contents['functions'])
@@ -480,7 +482,7 @@ def getPreviewPath(gallery, name):
 
 def saveMetadata(metadata_file, gallery, group_name, parent, description, preview, code,
                  tags):
-    data = {"gallery" : gallery,
+    data = {"gallery": gallery,
             "group_name": group_name,
             "description": description,
             "preview": preview,
@@ -527,3 +529,16 @@ def getRenderTab():
                 break
 
     return found
+
+
+def saveScene():
+    scene_name = hou.ui.readInput('Scene name:')[1]
+    project = hou.getenv("PROJECT")
+    data = {"project": project, "name": scene_name}
+
+    scenes_path = structure.folder_structure("scene_folder", data)
+    print(scenes_path)
+
+
+def sceneVersionUp():
+    hou.hipFile.saveAndIncrementFileName()
