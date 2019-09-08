@@ -68,5 +68,7 @@ gallery_publisher.show_houdini()]]></script>
     <memberTool name="roper"/>
     <memberTool name="material_browser"/>
     <memberTool name="gallery_publisher"/>
+    <memberTool name="open_file"/>
+    <memberTool name="save_scene"/>
   </toolshelf>
 </shelfDocument>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mainMenu>
+  <menuBar>
+    <subMenu id="triss_menu">
+      <label>TRISS</label>
+      <separatorItem id="separator_menu_item"/>
+    </subMenu>
+  </menuBar>
+  <!-- open file -->
+  <addScriptItem id="triss_open_file">
+    <label>Open file</label>
+    <parent>triss_menu</parent>
+    <insertBefore>separator_menu_item</insertBefore>
+    <scriptCode><![CDATA[from triss import open_hip_file_ui;reload(open_hip_file_ui);open_hip_file_ui.show_houdini()]]></scriptCode>
+  </addScriptItem>
+  <!-- save as item -->
+  <addScriptItem id="triss_save_as">
+    <label>Save as...</label>
+    <parent>triss_menu</parent>
+    <insertBefore>separator_menu_item</insertBefore>
+    <scriptCode><![CDATA[from triss import save_hip_file_ui;reload(save_hip_file_ui);save_hip_file_ui.show_houdini()]]></scriptCode>
+    <scriptArgs>-q -n extra_name</scriptArgs>
+  </addScriptItem>
+  <!-- version up item -->
+  <addScriptItem id="triss_scene_version_up">
+    <label>Scene Version Up</label>
+    <parent>triss_menu</parent>
+    <scriptCode><![CDATA[from triss import _houdini;reload(_houdini);_houdini.sceneVersionUp()]]></scriptCode>
+    <scriptArgs>-q -n extra_name</scriptArgs>
+  </addScriptItem>
+</mainMenu>

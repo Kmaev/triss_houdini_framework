@@ -5,6 +5,8 @@ import json
 import hou
 import os
 import imp
+import re
+import lucidity
 
 
 def create_node(name, context, node_type, position):
@@ -531,14 +533,104 @@ def getRenderTab():
     return found
 
 
-def saveScene():
-    scene_name = hou.ui.readInput('Scene name:')[1]
-    project = hou.getenv("PROJECT")
-    data = {"project": project, "name": scene_name}
+class OpenFile(object):
+    def __init__(self):
+        self.data = {"project": hou.getenv("PROJECT"),
+                     "sequence": hou.getenv("SEQUENCE"),
+                     "shot": hou.getenv("SHOT"),
+                     "department": hou.getenv("DEPARTMENT")}
+        self.user_folder = structure.folder_structure("user_folder", self.data)
+        self.user_folder = os.path.normpath(self.user_folder)
+        self.user_folder = self.user_folder.replace('\\', '/')
 
-    scenes_path = structure.folder_structure("scene_folder", data)
-    print(scenes_path)
+        self.user = os.getenv("USERNAME")
+
+        self.user_tasks = {}
+        for i in os.listdir(self.user_folder):
+            self.user_tasks[i] = os.path.join(self.user_folder, i)
+
+
+def getMaxVersion(scenes_folder, scene_name):
+    max_version = 0
+    for scene in os.listdir(scenes_folder):
+        result = re.match(r'(.+)_(v\d{3})(.+)', scene)
+
+        if not result:
+            continue
+
+        head, version, tail = result.groups()
+
+        if head != scene_name:
+            continue
+
+        version = int(version.strip('v'))
+        max_version = max(version, max_version)
+
+    max_version += 1
+
+    return max_version
+
+
+def makeScenePath(scene_name):
+    project = hou.getenv("PROJECT")
+    sequence = hou.getenv("SEQUENCE")
+    shot = hou.getenv("SHOT")
+    department = hou.getenv("DEPARTMENT")
+    data = {"project": project,
+            "sequence": sequence,
+            "shot": shot,
+            "department": department,
+            "name": scene_name,
+            'version': 'v001',
+            'ext': 'hip'}
+
+    scene_path = structure.folder_structure("scene_path", data)
+    scene_path = os.path.normpath(scene_path)
+    scene_path = scene_path.replace('\\', '/')
+    scenes_folder = os.path.dirname(scene_path)
+    if not os.path.isdir(scenes_folder):
+        return scene_path
+    else:
+        max_version = getMaxVersion(scenes_folder=scenes_folder,
+                                    scene_name=data["name"])
+        data['version'] = 'v{:03d}'.format(max_version)
+        scene_path = structure.folder_structure("scene_path", data)
+        scene_path = os.path.normpath(scene_path)
+        scene_path = scene_path.replace('\\', '/')
+
+        return scene_path
+
+
+def saveScene(scene_path):
+    if not os.path.isdir(os.path.dirname(scene_path)):
+        os.makedirs(os.path.dirname(scene_path))
+    hou.hipFile.save(scene_path)
 
 
 def sceneVersionUp():
-    hou.hipFile.saveAndIncrementFileName()
+    current_hip = hou.hipFile.name()
+    scenes_folder = os.path.dirname(current_hip)
+    template = lucidity.Template(
+        'model', r"{mount_point:.+}/{project:[\w\d_]+}/{sequence:[\w\d_]+}/{shot:[\w\d_]+}/{department:.+}/scenes/{username:\w+}/{name:[\w\d_]+}/{name:[\w\d_]+}_{version:v\d+}.{ext:\w+}")
+    data = template.parse(current_hip)
+
+    max_version = getMaxVersion(scenes_folder=scenes_folder,
+                                scene_name=data["name"])
+
+    data['version'] = 'v{:03d}'.format(max_version)
+    scene_path = structure.folder_structure("scene_path", data)
+    scene_path = os.path.normpath(scene_path)
+    scene_path = scene_path.replace('\\', '/')
+    hou.hipFile.save(scene_path)
+
+
+def setFrameRange():
+    hou.setFps(25)
+    hou.playbar.setFrameRange(1001, 1050)
+    hou.playbar.setPlaybackRange(1001, 1050)
+    hou.setFrame(1001)
+
+
+def scene_was_loaded(event_type):
+    if event_type == hou.hipFileEventType.AfterClear:
+        setFrameRange()

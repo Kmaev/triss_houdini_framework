@@ -180,5 +180,28 @@ QScrollBar::sub-line:horizontal {
     border-radius: 5px;
     background-color: transparent;
 }
-
-
+QHeaderView {
+    background-color: #3a3a3a;
+}
+QTreeView {
+    background-color: #262626;
+    border-radius: 3px;
+    border: 0px;
+    margin: 1px;
+}
+QTreeView::item {
+    border: 0px;
+}
+QHeaderView::section {
+    border: 3px;
+    border-radius: 3px;
+}
+QTreeView::item:selected {
+    background-color: #9a5331;
+}
+QLineEdit#SaveDialogOutput {
+    border: none;
+    border-radius: 3px;
+    background-color: transparent;
+    margin: 10px;
+}
