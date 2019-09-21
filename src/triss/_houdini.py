@@ -634,3 +634,74 @@ def setFrameRange():
 def scene_was_loaded(event_type):
     if event_type == hou.hipFileEventType.AfterClear:
         setFrameRange()
+
+
+class PublishableRenderRopNode(object):
+    output_template = 'render_output'
+
+    def __init__(self, node, name):
+        self.name = name
+        self.node = node
+
+    def getProjectData(self):
+        data = {}
+        data['project'] = os.getenv('PROJECT')
+        data['sequence'] = os.getenv('SEQUENCE')
+        data['shot'] = os.getenv('SHOT')
+        data['name'] = self.name
+        data['version'] = 'v001'
+        data['padding'] = '$F4'
+        data['out'] = os.getenv('OUT')
+
+        data['version'] = 'v' + str(self.getNextVersion(data)).zfill(3)
+        return data
+
+    def outputPath(self, template, data):
+        path = structure.folder_structure(template, data)
+        path = os.path.join(data['out'], path)
+        path = os.path.normpath(path)
+        path = path.replace('\\', '/')
+        return path
+
+    def getNextVersion(self, data):
+        path = self.outputPath(template=self.output_template,
+                               data=data)
+
+        folder = os.path.dirname(path)
+        if not os.path.isdir(folder):
+            return 1
+
+        max_version = 0
+        render_task_folder = os.path.dirname(folder)
+        for version in os.listdir(render_task_folder):
+            result = re.match(r'(v)(\d{3})', data['version'])
+
+            if not result:
+                continue
+
+            head, version = result.groups()
+
+            max_version = max(int(version), max_version)
+
+        max_version += 1
+        return max_version
+
+    def updateParameters(self):
+        pass
+
+
+class ArnoldPublishableRopNode(PublishableRenderRopNode):
+    def updateParameters(self):
+        self.node.parm('ar_picture').set(self.outputPath())
+        self.node.parm('ar_picture_format').set('deepexr')
+
+
+class MantraPublishableRopNode(PublishableRenderRopNode):
+    def updateParameters(self):
+        self.node.parm('ar_picture').set(self.outputPath())
+        self.node.parm('ar_picture_format').set('deepexr')
+
+
+def get_node(node, name):
+    if 'arnold' in node.type().name():
+        return ArnoldPublishableRopNode(node, name)

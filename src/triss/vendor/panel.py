@@ -12,6 +12,7 @@ class BaseScrollablePanelWidget(QtWidgets.QDialog):
             self.title = QtWidgets.QLabel('<b>%s</b>' % title)
             self.setWindowTitle(title)
         self.body_widget = QtWidgets.QWidget(self)
+        self.body_widget.setObjectName('body-widget')
         self.body_layout = QtWidgets.QVBoxLayout(self.body_widget)
         self.body_layout.setSpacing(0)
 
