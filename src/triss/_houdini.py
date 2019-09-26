@@ -643,12 +643,13 @@ class PublishableRenderRopNode(object):
         self.name = name
         self.node = node
 
-    def getProjectData(self):
+    def getProjectData(self, aov):
         data = {}
         data['project'] = os.getenv('PROJECT')
         data['sequence'] = os.getenv('SEQUENCE')
         data['shot'] = os.getenv('SHOT')
         data['name'] = self.name
+        data['aov'] = aov
         data['version'] = 'v001'
         data['padding'] = '$F4'
         data['out'] = os.getenv('OUT')
@@ -656,16 +657,15 @@ class PublishableRenderRopNode(object):
         data['version'] = 'v' + str(self.getNextVersion(data)).zfill(3)
         return data
 
-    def outputPath(self, template, data):
-        path = structure.folder_structure(template, data)
+    def outputPath(self, data):
+        path = structure.folder_structure(self.output_template, data)
         path = os.path.join(data['out'], path)
         path = os.path.normpath(path)
         path = path.replace('\\', '/')
         return path
 
     def getNextVersion(self, data):
-        path = self.outputPath(template=self.output_template,
-                               data=data)
+        path = self.outputPath(data=data)
 
         folder = os.path.dirname(path)
         if not os.path.isdir(folder):
@@ -691,17 +691,29 @@ class PublishableRenderRopNode(object):
 
 
 class ArnoldPublishableRopNode(PublishableRenderRopNode):
+
     def updateParameters(self):
-        self.node.parm('ar_picture').set(self.outputPath())
+        data = self.getProjectData(aov='deep')
+        self.node.parm('ar_picture').set(self.outputPath(data=data))
         self.node.parm('ar_picture_format').set('deepexr')
 
 
 class MantraPublishableRopNode(PublishableRenderRopNode):
+
     def updateParameters(self):
-        self.node.parm('ar_picture').set(self.outputPath())
-        self.node.parm('ar_picture_format').set('deepexr')
+        self.node.parm('vm_deepresolver').set('camera')
+        data = self.getProjectData(aov='deep')
+        self.node.parm('vm_dcmfilename').set(self.outputPath(data=data))
+        data = self.getProjectData(aov='beauty')
+        self.node.parm('vm_picture').set(self.outputPath(data=data))
+
+
 
 
 def get_node(node, name):
     if 'arnold' in node.type().name():
         return ArnoldPublishableRopNode(node, name)
+    elif 'ifd' in node.type().name():
+        return MantraPublishableRopNode(node, name)
+
+

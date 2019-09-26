@@ -205,3 +205,8 @@ QLineEdit#SaveDialogOutput {
     background-color: transparent;
     margin: 10px;
 }
+QLabel#render_label {
+    background-color: #262626;
+    border-radius: 3px;
+    padding: 1px;
+}

@@ -28,4 +28,10 @@
     <scriptCode><![CDATA[from triss import _houdini;reload(_houdini);_houdini.sceneVersionUp()]]></scriptCode>
     <scriptArgs>-q -n extra_name</scriptArgs>
   </addScriptItem>
+ <!--  bake render -->
+  <addScriptItem id="triss_bake_render">
+    <label>Bake render</label>
+    <parent>triss_menu</parent>
+    <scriptCode><![CDATA[from triss import bake_render_ui;reload(bake_render_ui);bake_render_ui.show_houdini()]]></scriptCode>
+  </addScriptItem>
 </mainMenu>

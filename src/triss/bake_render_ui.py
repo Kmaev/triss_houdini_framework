@@ -1,23 +1,24 @@
 from __future__ import print_function
-from Qt import QtWidgets, QtCore
-from triss.vendor import panel
+from Qt import QtWidgets
 import hou
 import os
 import res
 import flow_layout
 from triss import _houdini
-reload(_houdini)
 
 
 class BakeRenderDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super(BakeRenderDialog, self).__init__(parent=parent)
         # self.resize(450,180)
+        self.setWindowTitle("TRISS: Bake render v0.1.5")
         self.nodes_list = []
         self.phantom_selected_list = []
         self.render_nodes_to_create = []
         self.render_engines = {"arnold": "arnold", "mantra": "ifd"}
+        self.possible_render_nodes = ['subnet', 'geo']
         self.render_cam = None
+        self.start_pos = None
 
         self.central_layout = QtWidgets.QVBoxLayout(self)
 
@@ -36,7 +37,6 @@ class BakeRenderDialog(QtWidgets.QDialog):
 
         self.flow_widget = QtWidgets.QWidget()
         self.flow_layout = flow_layout.FlowLayout()
-        # self.flow_layout.setSpacing(10)
         self.flow_widget.setLayout(self.flow_layout)
         self.scroll_area.setWidget(self.flow_widget)
 
@@ -80,6 +80,7 @@ class BakeRenderDialog(QtWidgets.QDialog):
         self.addRenderNodes()
         self.populatePhantomList()
         self.populateCameraCombo()
+        self.getStartRenderNodePos()
 
         style_folder = os.environ.get("STYLE_TRISS")
         style_file = os.path.join(style_folder, "style_hou.qss")
@@ -103,9 +104,12 @@ class BakeRenderDialog(QtWidgets.QDialog):
             widget = item.widget()
             if widget.isChecked():
                 self.render_nodes_to_create.append(str(widget.text()))
+        if len(self.render_nodes_to_create) <= 0:
+            message = 'No render engine was selected'
+            QtWidgets.QMessageBox.critical(self, 'Error', message)
+            raise RuntimeError(message)
 
     def addRenderNodes(self):
-
         while self.flow_layout.count() > 0:
             item = self.flow_layout.takeAt(0)
             if not item:
@@ -114,14 +118,28 @@ class BakeRenderDialog(QtWidgets.QDialog):
             w = item.widget()
             if w:
                 w.deleteLater()
-
-        # self.render_list.clear()
         self.nodes_list = []
+        not_to_render_list = []
+        if not hou.selectedNodes():
+            message = "Select nodes to render"
+            parent = hou.qt.mainWindow()
+            mbox = QtWidgets.QMessageBox.critical(parent, 'Error', message)
+            raise RuntimeError
+
         for node in hou.selectedNodes():
-            self.nodes_list.append(node.name())
-            node_label = QtWidgets.QLabel(node.name())
-            node_label.setObjectName('render_label')
-            self.flow_layout.addWidget(node_label)
+            if node.type().name() in self.possible_render_nodes:
+                self.nodes_list.append(node.name())
+                node_label = QtWidgets.QLabel(node.name())
+                node_label.setObjectName('render_label')
+                self.flow_layout.addWidget(node_label)
+            else:
+                not_to_render_list.append(node.name())
+
+        if len(not_to_render_list) > 0:
+            message = "Selected nodes {} cannot be rendered".format(
+                ', '.join(not_to_render_list))
+            parent = hou.qt.mainWindow()
+            mbox = QtWidgets.QMessageBox.information(parent, 'Info', message)
 
     def populatePhantomList(self):
         self.phantom_list.clear()
@@ -144,21 +162,44 @@ class BakeRenderDialog(QtWidgets.QDialog):
         sel = self.camera_combo.itemData(index)
         self.render_cam = sel
 
-    def createRendersNodeToRop(self, render_name, to_render, to_phantom, render_engine):
+    def getStartRenderNodePos(self):
+        out = hou.node('/out')
+        pos_list = []
+        if len(out.children()) > 0:
+            for i in out.children():
+                pos_list.append(i.position())
+            max_x = max([x[0] for x in pos_list])
+
+            max_y = max([x[1] for x in pos_list])
+
+            self.start_pos = hou.Vector2(max_x + 2, max_y)
+        else:
+            self.start_pos = hou.Vector2(0, 0)
+
+    def createRendersNodeToRop(self, render_name, to_render, to_phantom, render_engine, position):
+        if not render_name:  # to show message
+            message = 'Must specify render name'
+            QtWidgets.QMessageBox.critical(self, 'Error', message)
+            raise RuntimeError(message)  # to stop execute code
+
         out = hou.node('/out')
         render_node = out.createNode(render_engine, render_name)
+        render_node.setPosition(position)
         render_node.setParms({'vobject': '', 'forceobject': to_render, 'phantom_objects': to_phantom,
                               'camera': self.render_cam})
+        return render_node
 
     def addRenderNode(self):
         phantom = ', '.join(self.phantom_selected_list)
         render = ', '.join(self.nodes_list)
         self.getSelectedRenderEngine()
         for render_engine in self.render_nodes_to_create:
-            self.createRendersNodeToRop(render_name=self.render_name.text(), to_render=render,
-                                        to_phantom=phantom, render_engine=self.render_engines[render_engine])
-        output = _houdini.RenderData(name=self.render_name.text())
-        print(output.output_path)
+            node = self.createRendersNodeToRop(render_name=self.render_name.text(), to_render=render,
+                                               to_phantom=phantom, render_engine=self.render_engines[render_engine], position=self.start_pos)
+            render_node = _houdini.get_node(node, self.render_name.text())
+            render_node.updateParameters()
+            self.start_pos[1] -= 1
+        self.close()
 
 
 dialog = None
