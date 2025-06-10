@@ -2,6 +2,10 @@
 
 This repository contains a Houdini pipeline framework developed in 2019, focused on optimizing asset management and production workflows.
 
+Demo Presentation:
+
+https://vimeo.com/357169653
+
 It includes:
 - Asset versioning and structured publishing tools.  
 - Scene and material browsers for asset navigation and reuse.  
