@@ -16,6 +16,9 @@ It includes:
 Designed to automate common production tasks and ensure consistent asset handling across Houdini projects.
 
 ---
+**Version Control** - Enables version control and allows scene loading via the integrated UI.
+
+![screeshot5](https://github.com/user-attachments/assets/8bd4be37-574c-4d95-9a62-e2a487a0fee5)
 
 **Asset Browser UI** — for asset navigation and management in Houdini.
 
